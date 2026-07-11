@@ -1,0 +1,19 @@
+{
+  "name": "java-algorithm-memory-cards",
+  "version": "1.0.0",
+  "description": "A local Anki-style Java algorithm flashcard app for LeetCode Hot100 review.",
+  "private": false,
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check app.js && node --check hot100-cards.js && node --check hot100-solutions.js && node --check server.js"
+  },
+  "keywords": [
+    "leetcode",
+    "java",
+    "algorithms",
+    "flashcards",
+    "anki",
+    "hot100"
+  ],
+  "license": "MIT"
+}
