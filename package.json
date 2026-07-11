@@ -1,7 +1,7 @@
 {
   "name": "java-algorithm-memory-cards",
   "version": "1.0.0",
-  "description": "A local Anki-style Java algorithm flashcard app for LeetCode Hot100 review.",
+  "description": "本地优先的 Java 算法 Anki 式记忆卡片工具，内置 LeetCode Hot100，支持翻面复习、每日复习、Java 代码高亮和 DeepSeek 智能制卡。",
   "private": false,
   "scripts": {
     "start": "node server.js",
