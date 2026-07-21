@@ -20,5 +20,5 @@ if errorlevel 1 (
 
 start "Java Algorithm Cards Server" cmd /k "cd /d "%~dp0" && node server.js"
 timeout /t 2 /nobreak >nul
-start "" "http://localhost:8787"
+start "" "http://localhost:8787/app.html"
 endlocal

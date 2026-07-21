@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Java 算法记忆卡片 - 复习工具</title>
+    <link rel="stylesheet" href="assets/vendor/prism/prism.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Java interview deck</p>
+          <h1>算法记忆卡片</h1>
+        </div>
+        <div class="top-actions">
+          <a class="ghost-button" href="index.html">项目介绍</a>
+          <button class="ghost-button" id="shuffleButton" type="button" title="随机抽一张卡片">随机抽卡</button>
+          <button class="primary-button" id="flipButton" type="button" title="翻到答案面">翻面</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="panel filter-panel" aria-label="筛选卡片">
+          <label class="field-label" for="searchInput">搜索</label>
+          <input id="searchInput" type="search" placeholder="题号、专题、关键词">
+
+          <div class="filter-block">
+            <div class="section-title">专题</div>
+            <div class="tag-grid" id="topicFilters"></div>
+          </div>
+
+          <div class="filter-block">
+            <div class="section-title">状态</div>
+            <label class="check-row">
+              <input id="weakOnlyToggle" type="checkbox">
+              <span>只看薄弱卡</span>
+            </label>
+            <label class="check-row">
+              <input id="customOnlyToggle" type="checkbox">
+              <span>只看我添加的</span>
+            </label>
+          </div>
+
+          <div class="stats">
+            <div>
+              <strong id="totalCount">0</strong>
+              <span>当前卡片</span>
+            </div>
+            <div>
+              <strong id="weakCount">0</strong>
+              <span>薄弱</span>
+            </div>
+            <div>
+              <strong id="knownCount">0</strong>
+              <span>已掌握</span>
+            </div>
+          </div>
+
+          <div class="filter-block daily-block">
+            <div class="section-title">每日复习</div>
+            <button class="primary-button full" id="dailyDeckButton" type="button">今日 10 张</button>
+            <button class="ghost-button full" id="redrawDailyButton" type="button">重抽今日</button>
+            <button class="ghost-button full" id="allCardsButton" type="button">全部卡池</button>
+            <p class="note" id="dailyStatus">每天抽 10 张，不重复抽完整个卡池。</p>
+          </div>
+        </aside>
+
+        <section class="study-zone">
+          <article class="flashcard" id="flashcard" tabindex="0" aria-live="polite">
+            <div class="card-side card-front">
+              <p class="front-source" id="cardSourceFront">来源</p>
+              <h2 id="cardTitle">选择一张卡片开始</h2>
+              <p class="prompt" id="cardFront">用搜索、标签或随机抽卡开始复习。</p>
+              <div class="hint-box">
+                <button class="hint-button" id="hintButton" type="button">显示提示</button>
+                <p id="cardHint" class="hidden">先独立回忆，再决定是否看提示。</p>
+              </div>
+              <div class="chips" id="cardTags"></div>
+            </div>
+
+            <div class="card-side card-back">
+              <div class="card-meta">
+                <span id="cardTopic">专题</span>
+                <span id="cardDifficulty">难度</span>
+                <span id="cardSource">来源</span>
+              </div>
+              <div class="answer-grid">
+                <section>
+                  <div class="section-title">精简答案</div>
+                  <p id="cardShortAnswer"></p>
+                </section>
+                <section>
+                  <div class="section-title">复杂度</div>
+                  <p id="cardComplexity"></p>
+                </section>
+              </div>
+              <details open>
+                <summary>详细复盘</summary>
+                <div id="cardDetails" class="detail-text"></div>
+              </details>
+              <details open>
+                <summary>Java 代码</summary>
+                <pre><code id="cardCode"></code></pre>
+              </details>
+              <details>
+                <summary>相关题目</summary>
+                <p id="cardRelated"></p>
+              </details>
+            </div>
+          </article>
+
+          <div class="review-actions" aria-label="复习结果">
+            <button id="againButton" type="button">没想起</button>
+            <button id="hardButton" type="button">模糊</button>
+            <button id="goodButton" type="button">记住了</button>
+            <button id="masteredButton" type="button">已掌握</button>
+          </div>
+
+          <div class="list-toolbar">
+            <span id="listSummary">当前卡池</span>
+            <button class="ghost-button compact-button" id="toggleListButton" type="button">收起列表</button>
+          </div>
+          <div class="card-list" id="cardList" aria-label="卡片列表"></div>
+        </section>
+
+        <aside class="panel manage-panel" aria-label="维护卡片">
+          <div class="tabs" role="tablist">
+            <button class="tab active" id="addTab" type="button">新增</button>
+            <button class="tab" id="dataTab" type="button">数据</button>
+          </div>
+
+          <div id="addPane">
+            <section class="card-maintenance">
+              <div class="section-title">当前卡片</div>
+              <div class="maintenance-actions">
+                <button class="ghost-button" id="editCurrentButton" type="button">编辑当前卡片</button>
+                <button class="danger-button" id="deleteCurrentButton" type="button">删除当前卡片</button>
+              </div>
+              <p class="note" id="editStatus">编辑会把当前卡片内容载入下方表单。</p>
+            </section>
+
+            <section class="ai-agent">
+              <div class="section-title">智能制卡</div>
+              <div class="form-row">
+                <label>
+                  模型
+                  <select id="modelSelect">
+                    <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+                    <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+                  </select>
+                </label>
+              </div>
+              <p class="note">API Key 从本地服务读取，不在页面里输入。推荐用环境变量或本目录 `.env` 文件保存。</p>
+              <label>
+                题目
+                <textarea id="aiProblemInput" rows="4" placeholder="粘贴 LeetCode 题目、题号、你的理解或题解要求"></textarea>
+              </label>
+              <label>
+                Java 代码
+                <textarea id="aiCodeInput" rows="6" spellcheck="false" placeholder="粘贴你的 Java 解法"></textarea>
+              </label>
+              <label>
+                补充要求
+                <textarea id="aiNoteInput" rows="2" placeholder="例如：偏 Hot100、指出我这段代码的易错点"></textarea>
+              </label>
+              <button class="primary-button full" id="generateDraftButton" type="button">智能填写草稿</button>
+              <p class="note" id="aiStatus">生成后会自动填入下面的表单，你可以继续手动修改。</p>
+            </section>
+
+            <form id="addCardForm" class="add-form">
+              <label>
+                标题
+                <input name="title" required placeholder="例如：LC 3 无重复字符的最长子串">
+              </label>
+              <label>
+                专题
+                <select name="topic" required>
+                  <option>哈希</option>
+                  <option>双指针</option>
+                  <option>滑动窗口</option>
+                  <option>栈</option>
+                  <option>动态规划</option>
+                  <option>数组</option>
+                  <option>矩阵</option>
+                  <option>链表</option>
+                  <option>堆</option>
+                  <option>二叉树</option>
+                  <option>图论</option>
+                  <option>回溯</option>
+                  <option>二分</option>
+                  <option>贪心</option>
+                  <option>多维动态规划</option>
+                  <option>技巧</option>
+                  <option>高频面试</option>
+                </select>
+              </label>
+              <label>
+                题面
+                <textarea name="front" required rows="3" placeholder="看见这个题，先问自己什么？"></textarea>
+              </label>
+              <label>
+                提示
+                <textarea name="hint" rows="2" placeholder="只给一点方向，别直接泄底"></textarea>
+              </label>
+              <label>
+                精简答案
+                <textarea name="shortAnswer" required rows="3" placeholder="3 到 5 句话讲清核心"></textarea>
+              </label>
+              <label>
+                详细复盘
+                <textarea name="details" rows="4" placeholder="思路、边界、坑点、为什么这样做"></textarea>
+              </label>
+              <label>
+                Java 代码
+                <textarea name="code" rows="6" spellcheck="false" placeholder="粘贴或修改 Java 代码"></textarea>
+              </label>
+              <div class="form-row">
+                <label>
+                  复杂度
+                  <input name="complexity" placeholder="O(n), O(1)">
+                </label>
+                <label>
+                  标签
+                  <input name="tags" placeholder="Hot100, 代码随想录, HashMap">
+                </label>
+              </div>
+              <label>
+                相关题目
+                <input name="related" placeholder="LC 3, LC 438">
+              </label>
+              <div class="form-actions">
+                <button class="primary-button full" id="saveCardButton" type="submit">添加卡片</button>
+                <button class="ghost-button full hidden" id="cancelEditButton" type="button">取消编辑</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="dataTools" class="data-tools hidden">
+            <button id="exportButton" class="ghost-button full" type="button">导出卡片和进度</button>
+            <label class="file-button">
+              导入 JSON
+              <input id="importInput" type="file" accept="application/json">
+            </label>
+            <button id="deleteCustomButton" class="ghost-button full" type="button">删除当前卡片</button>
+            <button id="restoreBuiltInButton" class="ghost-button full" type="button">恢复内置卡片</button>
+            <button id="resetProgressButton" class="danger-button full" type="button">清空复习进度</button>
+            <p class="note">新增卡片和掌握度保存在当前浏览器。换电脑或换浏览器前，先导出 JSON。</p>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="hot100-solutions.js"></script>
+    <script src="hot100-cards.js"></script>
+    <script src="assets/vendor/prism/prism.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -505,7 +505,7 @@
     els.cardShortAnswer.textContent = card.shortAnswer || "暂无精简答案。";
     els.cardComplexity.textContent = card.complexity || "待补充";
     els.cardDetails.textContent = card.details || "暂无详细复盘。";
-    els.cardCode.innerHTML = highlightJava(card.code || "// 待补充 Java 代码");
+    renderCode(card.code || "// 待补充 Java 代码");
     els.cardRelated.textContent = card.related || "待补充";
     els.cardTags.innerHTML = "";
     els.cardTags.classList.toggle("hidden", !state.flipped);
@@ -534,7 +534,7 @@
     els.cardShortAnswer.textContent = "暂无内容。";
     els.cardComplexity.textContent = "暂无内容。";
     els.cardDetails.textContent = "暂无内容。";
-    els.cardCode.innerHTML = "";
+    renderCode("");
     els.cardRelated.textContent = "暂无内容。";
     els.cardTags.innerHTML = "";
     els.cardTags.classList.add("hidden");
@@ -711,8 +711,8 @@
       stream: false
     };
 
-    if (location.protocol === "file:") {
-      throw new Error("智能制卡需要通过本地服务打开。请运行 node server.js 后访问 http://localhost:8787。");
+    if (!isLocalAiService()) {
+      throw new Error("DeepSeek 智能制卡需要克隆项目并在本地运行 node server.js，再访问 http://localhost:8787/app.html。API Key 只允许放在本地 .env 或环境变量中。");
     }
 
     const response = await fetch("/api/generate-card", {
@@ -927,6 +927,12 @@
     load();
   }
 
+  function isLocalAiService() {
+    return location.protocol === "http:"
+      && (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+      && location.port === "8787";
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replaceAll("&", "&amp;")
@@ -936,28 +942,12 @@
       .replaceAll("'", "&#039;");
   }
 
-  function highlightJava(code) {
-    const keywords = new Set("public private protected class static final void int long double float boolean char byte short new return if else for while do switch case break continue try catch throw throws extends implements interface import package null true false this super".split(" "));
-    const types = new Set("String Integer Long Double Boolean Character List ArrayList LinkedList Map HashMap Set HashSet Deque ArrayDeque Queue PriorityQueue Stack Arrays Collections Math".split(" "));
-    const tokenPattern = /(\/\/.*?$|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][A-Za-z0-9_]*\b/gm;
-    let output = "";
-    let lastIndex = 0;
-
-    String(code).replace(tokenPattern, (token, comment, stringValue, offset) => {
-      output += escapeHtml(String(code).slice(lastIndex, offset));
-      const safe = escapeHtml(token);
-      if (comment) output += `<span class="code-comment">${safe}</span>`;
-      else if (stringValue) output += `<span class="code-string">${safe}</span>`;
-      else if (/^\d/.test(token)) output += `<span class="code-number">${safe}</span>`;
-      else if (keywords.has(token)) output += `<span class="code-keyword">${safe}</span>`;
-      else if (types.has(token)) output += `<span class="code-type">${safe}</span>`;
-      else output += safe;
-      lastIndex = offset + token.length;
-      return token;
-    });
-
-    output += escapeHtml(String(code).slice(lastIndex));
-    return output;
+  function renderCode(code) {
+    els.cardCode.className = "language-java";
+    els.cardCode.textContent = code;
+    if (window.Prism?.highlightElement) {
+      window.Prism.highlightElement(els.cardCode);
+    }
   }
 
   els.searchInput.addEventListener("input", (event) => {

@@ -12,6 +12,13 @@
 
 智能制卡功能通过本地 Node 服务调用 DeepSeek API。API Key 只放在本地 `.env` 或环境变量中，不会在页面里输入，也不会提交到 Git。
 
+## 在线访问
+
+- 项目介绍页：<https://for5634.github.io/java-algorithm-memory-cards/>
+- 在线复习工具：<https://for5634.github.io/java-algorithm-memory-cards/app.html>
+
+在线版可以阅读和复习内置 Hot100 卡片，也能把复习进度保存到当前浏览器。DeepSeek 智能制卡需要本地服务代理，因此请克隆项目并在本地运行。
+
 ## 适合谁
 
 - 正在准备 Java 后端算法面试的人
@@ -34,7 +41,7 @@
 - 恢复内置卡片
 - 本地保存复习进度
 - 导入/导出卡片和进度 JSON
-- Java 代码高亮
+- 本地 Prism 风格 Java 代码高亮
 - DeepSeek 智能制卡：粘贴题目和 Java 代码，自动生成卡片草稿
 
 ## 快速启动
@@ -50,7 +57,7 @@ start-cards.bat
 它会启动本地服务，并打开：
 
 ```text
-http://localhost:8787
+http://localhost:8787/app.html
 ```
 
 ### 方式二：命令行启动
@@ -63,7 +70,7 @@ node server.js
 然后打开：
 
 ```text
-http://localhost:8787
+http://localhost:8787/app.html
 ```
 
 ### 方式三：只使用复习功能
