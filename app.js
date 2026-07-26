@@ -158,6 +158,10 @@
     totalCount: document.getElementById("totalCount"),
     weakCount: document.getElementById("weakCount"),
     knownCount: document.getElementById("knownCount"),
+    statsProgressText: document.getElementById("statsProgressText"),
+    statusChart: document.getElementById("statusChart"),
+    statusBars: document.getElementById("statusBars"),
+    topicStats: document.getElementById("topicStats"),
     dailyDeckButton: document.getElementById("dailyDeckButton"),
     redrawDailyButton: document.getElementById("redrawDailyButton"),
     allCardsButton: document.getElementById("allCardsButton"),
@@ -181,6 +185,12 @@
     listSummary: document.getElementById("listSummary"),
     toggleListButton: document.getElementById("toggleListButton"),
     flipButton: document.getElementById("flipButton"),
+    mobileFlipButton: document.getElementById("mobileFlipButton"),
+    mobileReviewActions: document.getElementById("mobileReviewActions"),
+    mobileAgainButton: document.getElementById("mobileAgainButton"),
+    mobileHardButton: document.getElementById("mobileHardButton"),
+    mobileGoodButton: document.getElementById("mobileGoodButton"),
+    mobileMasteredButton: document.getElementById("mobileMasteredButton"),
     shuffleButton: document.getElementById("shuffleButton"),
     againButton: document.getElementById("againButton"),
     hardButton: document.getElementById("hardButton"),
@@ -216,6 +226,9 @@
     state.progress = readJson(PROGRESS_KEY, {});
     state.daily = readJson(DAILY_KEY, { date: "", usedIds: [], deckIds: [] });
     state.aiConfig = readJson(AI_CONFIG_KEY, state.aiConfig);
+    if (window.matchMedia("(max-width: 820px)").matches) {
+      state.listCollapsed = true;
+    }
     const hot100Cards = (window.HOT100_CARDS || []).map(normalizeCard);
     const hot100Numbers = new Set(hot100Cards.map((card) => getLcNumber(card.title)).filter(Boolean));
     const deleted = new Set(state.deletedIds);
@@ -358,9 +371,95 @@
   function renderStats() {
     const filtered = getFilteredCards();
     const progressValues = filtered.map((card) => state.progress[card.id] || {});
+    const stats = buildProgressStats(filtered);
     els.totalCount.textContent = filtered.length;
     els.weakCount.textContent = progressValues.filter((item) => item.status === "again" || item.status === "hard").length;
     els.knownCount.textContent = progressValues.filter((item) => item.status === "mastered").length;
+    renderProgressDashboard(stats);
+  }
+
+  function buildProgressStats(cards) {
+    const buckets = [
+      { key: "new", label: "新卡", color: "#6b7280", count: 0 },
+      { key: "again", label: "薄弱", color: "#b84242", count: 0 },
+      { key: "hard", label: "模糊", color: "#b98121", count: 0 },
+      { key: "good", label: "记住", color: "#3b7c5b", count: 0 },
+      { key: "mastered", label: "已掌握", color: "#2463a6", count: 0 }
+    ];
+    const byKey = new Map(buckets.map((bucket) => [bucket.key, bucket]));
+    const topicMap = new Map();
+
+    cards.forEach((card) => {
+      const status = state.progress[card.id]?.status || "new";
+      const bucket = byKey.get(status) || byKey.get("new");
+      bucket.count += 1;
+      if (!topicMap.has(card.topic)) {
+        topicMap.set(card.topic, { topic: card.topic || "未分类", total: 0, weak: 0, hard: 0, mastered: 0 });
+      }
+      const item = topicMap.get(card.topic);
+      item.total += 1;
+      if (status === "again" || status === "hard") item.weak += 1;
+      if (status === "hard") item.hard += 1;
+      if (status === "mastered") item.mastered += 1;
+    });
+
+    const total = cards.length;
+    const mastered = byKey.get("mastered").count;
+    const hard = byKey.get("hard").count;
+    const weak = byKey.get("again").count + hard;
+    const topics = Array.from(topicMap.values())
+      .sort((a, b) => b.weak - a.weak || b.hard - a.hard || b.total - a.total)
+      .slice(0, 6);
+    return { buckets, total, mastered, hard, weak, topics };
+  }
+
+  function renderProgressDashboard(stats) {
+    if (!els.statusChart || !els.statusBars || !els.topicStats) return;
+    const masteredRate = stats.total ? Math.round((stats.mastered / stats.total) * 100) : 0;
+    const hardRate = stats.total ? Math.round((stats.hard / stats.total) * 100) : 0;
+    els.statsProgressText.textContent = `${masteredRate}%`;
+
+    if (!stats.total) {
+      els.statusChart.innerHTML = "<div class=\"empty-state\">当前筛选下没有卡片。</div>";
+      els.statusBars.innerHTML = "";
+      els.topicStats.innerHTML = "";
+      return;
+    }
+
+    els.statusChart.innerHTML = `
+      <div class="stat-ring" style="--mastered:${masteredRate}; --hard:${hardRate}">
+        <span>${masteredRate}%</span>
+        <small>已掌握</small>
+      </div>
+      <div class="stat-callouts">
+        <div><strong>${stats.mastered}</strong><span>已掌握</span></div>
+        <div><strong>${stats.hard}</strong><span>模糊</span></div>
+        <div><strong>${stats.weak}</strong><span>薄弱合计</span></div>
+      </div>
+    `;
+
+    els.statusBars.innerHTML = stats.buckets.map((bucket) => {
+      const percent = stats.total ? Math.round((bucket.count / stats.total) * 100) : 0;
+      return `
+        <div class="status-bar-row">
+          <span>${bucket.label}</span>
+          <div class="status-bar-track">
+            <i style="width:${percent}%; background:${bucket.color}"></i>
+          </div>
+          <strong>${bucket.count}</strong>
+        </div>
+      `;
+    }).join("");
+
+    els.topicStats.innerHTML = `
+      <div class="section-title">薄弱专题 Top ${stats.topics.length || 0}</div>
+      ${stats.topics.length ? stats.topics.map((topic) => `
+        <div class="topic-stat-row">
+          <span>${escapeHtml(topic.topic)}</span>
+          <strong>${topic.weak}/${topic.total}</strong>
+        </div>
+      `).join("") : "<p class=\"note\">还没有专题统计。</p>"}
+    `;
   }
 
   function renderDailyStatus() {
@@ -489,6 +588,7 @@
     const progress = state.progress[card.id] || {};
     els.flashcard.classList.toggle("flipped", state.flipped);
     els.flipButton.textContent = state.flipped ? "回到题面" : "看答案";
+    renderMobileActions(true);
     els.cardSourceFront.textContent = [
       card.source || "自定义",
       statusText(progress.status),
@@ -522,6 +622,7 @@
     state.hintVisible = false;
     els.flashcard.classList.remove("flipped");
     els.flipButton.textContent = "看答案";
+    renderMobileActions(false);
     els.cardSourceFront.textContent = "没有匹配结果";
     els.cardTitle.textContent = "没有匹配卡片";
     els.cardFront.textContent = "换个关键词、关闭筛选，或回到全部卡池继续复习。";
@@ -538,6 +639,19 @@
     els.cardRelated.textContent = "暂无内容。";
     els.cardTags.innerHTML = "";
     els.cardTags.classList.add("hidden");
+  }
+
+  function renderMobileActions(hasCard) {
+    if (!els.mobileFlipButton || !els.mobileReviewActions) return;
+    els.mobileFlipButton.hidden = !hasCard || state.flipped;
+    els.mobileReviewActions.hidden = !hasCard || !state.flipped;
+    els.mobileFlipButton.textContent = state.flipped ? "回到题面" : "看答案";
+  }
+
+  function flipActiveCard() {
+    state.flipped = !state.flipped;
+    state.hintVisible = false;
+    renderActiveCard();
   }
 
   function statusText(status) {
@@ -989,24 +1103,15 @@
     render();
   });
 
-  els.flipButton.addEventListener("click", () => {
-    state.flipped = !state.flipped;
-    state.hintVisible = false;
-    renderActiveCard();
-  });
+  els.flipButton.addEventListener("click", flipActiveCard);
+  els.mobileFlipButton.addEventListener("click", flipActiveCard);
 
-  els.flashcard.addEventListener("dblclick", () => {
-    state.flipped = !state.flipped;
-    state.hintVisible = false;
-    renderActiveCard();
-  });
+  els.flashcard.addEventListener("dblclick", flipActiveCard);
 
   els.flashcard.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      state.flipped = !state.flipped;
-      state.hintVisible = false;
-      renderActiveCard();
+      flipActiveCard();
     }
   });
 
@@ -1034,6 +1139,10 @@
   els.hardButton.addEventListener("click", () => mark("hard"));
   els.goodButton.addEventListener("click", () => mark("good"));
   els.masteredButton.addEventListener("click", () => mark("mastered"));
+  els.mobileAgainButton.addEventListener("click", () => mark("again"));
+  els.mobileHardButton.addEventListener("click", () => mark("hard"));
+  els.mobileGoodButton.addEventListener("click", () => mark("good"));
+  els.mobileMasteredButton.addEventListener("click", () => mark("mastered"));
 
   els.addTab.addEventListener("click", () => {
     els.addTab.classList.add("active");
@@ -1081,9 +1190,7 @@
   document.addEventListener("keydown", (event) => {
     if (event.target.matches("input, textarea, select")) return;
     if (event.key.toLowerCase() === "f") {
-      state.flipped = !state.flipped;
-      state.hintVisible = false;
-      renderActiveCard();
+      flipActiveCard();
     }
     if (event.key.toLowerCase() === "r") els.shuffleButton.click();
     if (event.key === "1") mark("again");

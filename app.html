@@ -21,8 +21,15 @@
         </div>
       </header>
 
+      <nav class="mobile-nav" aria-label="移动端快捷入口">
+        <a href="#studyArea">复习</a>
+        <a href="#filterPanel">筛选</a>
+        <a href="#statsPanel">统计</a>
+        <a href="#dataPanel">数据</a>
+      </nav>
+
       <main class="workspace">
-        <aside class="panel filter-panel" aria-label="筛选卡片">
+        <aside class="panel filter-panel" id="filterPanel" aria-label="筛选卡片">
           <label class="field-label" for="searchInput">搜索</label>
           <input id="searchInput" type="search" placeholder="题号、专题、关键词">
 
@@ -67,7 +74,7 @@
           </div>
         </aside>
 
-        <section class="study-zone">
+        <section class="study-zone" id="studyArea">
           <article class="flashcard" id="flashcard" tabindex="0" aria-live="polite">
             <div class="card-side card-front">
               <p class="front-source" id="cardSourceFront">来源</p>
@@ -118,6 +125,19 @@
             <button id="masteredButton" type="button">已掌握</button>
           </div>
 
+          <section class="panel stats-panel" id="statsPanel" aria-label="本地复习统计">
+            <div class="stats-panel-head">
+              <div>
+                <div class="section-title">本地掌握统计</div>
+                <p class="note">只统计当前浏览器保存的复习进度。</p>
+              </div>
+              <strong id="statsProgressText">0%</strong>
+            </div>
+            <div class="status-chart" id="statusChart"></div>
+            <div class="status-bars" id="statusBars"></div>
+            <div class="topic-stats" id="topicStats"></div>
+          </section>
+
           <div class="list-toolbar">
             <span id="listSummary">当前卡池</span>
             <button class="ghost-button compact-button" id="toggleListButton" type="button">收起列表</button>
@@ -125,7 +145,7 @@
           <div class="card-list" id="cardList" aria-label="卡片列表"></div>
         </section>
 
-        <aside class="panel manage-panel" aria-label="维护卡片">
+        <aside class="panel manage-panel" id="dataPanel" aria-label="维护卡片">
           <div class="tabs" role="tablist">
             <button class="tab active" id="addTab" type="button">新增</button>
             <button class="tab" id="dataTab" type="button">数据</button>
@@ -250,6 +270,16 @@
           </div>
         </aside>
       </main>
+
+      <div class="mobile-action-dock" aria-label="手机复习操作">
+        <button class="primary-button full" id="mobileFlipButton" type="button">看答案</button>
+        <div class="mobile-review-actions" id="mobileReviewActions">
+          <button id="mobileAgainButton" type="button">没想起</button>
+          <button id="mobileHardButton" type="button">模糊</button>
+          <button id="mobileGoodButton" type="button">记住了</button>
+          <button id="mobileMasteredButton" type="button">已掌握</button>
+        </div>
+      </div>
     </div>
 
     <script src="hot100-solutions.js"></script>
