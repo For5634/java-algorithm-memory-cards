@@ -227,9 +227,30 @@ button:focus-visible,
   gap: 14px;
 }
 
+.stats-panel-head {
+  align-items: flex-start;
+}
+
+.stats-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .stats-panel-head strong {
   color: var(--blue);
   font-size: 30px;
+}
+
+.stats-details {
+  display: grid;
+  gap: 16px;
+}
+
+.stats-panel.collapsed .stats-details {
+  display: none;
 }
 
 .status-chart {
@@ -868,7 +889,7 @@ button:disabled {
     top: 0;
     z-index: 20;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin: 12px 0 0;
     border: 1px solid var(--line);
@@ -963,17 +984,7 @@ button:disabled {
   }
 
   .stats-panel {
-    padding: 14px;
-  }
-
-  .status-chart,
-  .stat-callouts {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-  }
-
-  .stat-ring {
-    align-self: center;
+    display: none;
   }
 
   .card-list {

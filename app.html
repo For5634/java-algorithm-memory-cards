@@ -24,7 +24,6 @@
       <nav class="mobile-nav" aria-label="移动端快捷入口">
         <a href="#studyArea">复习</a>
         <a href="#filterPanel">筛选</a>
-        <a href="#statsPanel">统计</a>
         <a href="#dataPanel">数据</a>
       </nav>
 
@@ -125,17 +124,22 @@
             <button id="masteredButton" type="button">已掌握</button>
           </div>
 
-          <section class="panel stats-panel" id="statsPanel" aria-label="本地复习统计">
+          <section class="panel stats-panel collapsed" id="statsPanel" aria-label="本地复习统计">
             <div class="stats-panel-head">
               <div>
                 <div class="section-title">本地掌握统计</div>
                 <p class="note">只统计当前浏览器保存的复习进度。</p>
               </div>
-              <strong id="statsProgressText">0%</strong>
+              <div class="stats-head-actions">
+                <strong id="statsProgressText">0%</strong>
+                <button class="ghost-button compact-button" id="statsToggleButton" type="button" aria-expanded="false">查看详细统计</button>
+              </div>
             </div>
-            <div class="status-chart" id="statusChart"></div>
-            <div class="status-bars" id="statusBars"></div>
-            <div class="topic-stats" id="topicStats"></div>
+            <div class="stats-details" id="statsDetails">
+              <div class="status-chart" id="statusChart"></div>
+              <div class="status-bars" id="statusBars"></div>
+              <div class="topic-stats" id="topicStats"></div>
+            </div>
           </section>
 
           <div class="list-toolbar">

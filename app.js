@@ -145,6 +145,7 @@
     weakOnly: false,
     customOnly: false,
     listCollapsed: false,
+    statsExpanded: false,
     flipped: false,
     hintVisible: false,
     aiConfig: { model: "deepseek-v4-pro" }
@@ -159,6 +160,9 @@
     weakCount: document.getElementById("weakCount"),
     knownCount: document.getElementById("knownCount"),
     statsProgressText: document.getElementById("statsProgressText"),
+    statsPanel: document.getElementById("statsPanel"),
+    statsToggleButton: document.getElementById("statsToggleButton"),
+    statsDetails: document.getElementById("statsDetails"),
     statusChart: document.getElementById("statusChart"),
     statusBars: document.getElementById("statusBars"),
     topicStats: document.getElementById("topicStats"),
@@ -414,10 +418,13 @@
   }
 
   function renderProgressDashboard(stats) {
-    if (!els.statusChart || !els.statusBars || !els.topicStats) return;
+    if (!els.statsPanel || !els.statusChart || !els.statusBars || !els.topicStats) return;
     const masteredRate = stats.total ? Math.round((stats.mastered / stats.total) * 100) : 0;
     const hardRate = stats.total ? Math.round((stats.hard / stats.total) * 100) : 0;
     els.statsProgressText.textContent = `${masteredRate}%`;
+    els.statsPanel.classList.toggle("collapsed", !state.statsExpanded);
+    els.statsToggleButton.textContent = state.statsExpanded ? "收起详细统计" : "查看详细统计";
+    els.statsToggleButton.setAttribute("aria-expanded", String(state.statsExpanded));
 
     if (!stats.total) {
       els.statusChart.innerHTML = "<div class=\"empty-state\">当前筛选下没有卡片。</div>";
@@ -1133,6 +1140,11 @@
   els.toggleListButton.addEventListener("click", () => {
     state.listCollapsed = !state.listCollapsed;
     renderCardList();
+  });
+
+  els.statsToggleButton.addEventListener("click", () => {
+    state.statsExpanded = !state.statsExpanded;
+    renderStats();
   });
 
   els.againButton.addEventListener("click", () => mark("again"));
