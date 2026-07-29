@@ -648,18 +648,50 @@ pre {
 .add-form,
 .data-tools,
 .ai-agent,
-.card-maintenance {
+.card-maintenance,
+.sync-panel {
   display: grid;
   gap: 12px;
 }
 
 .ai-agent,
-.card-maintenance {
+.card-maintenance,
+.sync-panel {
   margin-bottom: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #f9fafb;
   padding: 14px;
+}
+
+.sync-result {
+  display: grid;
+  gap: 10px;
+}
+
+.sync-qr {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 12px;
+}
+
+.sync-qr svg {
+  width: min(220px, 100%);
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.sync-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sync-targets .note {
+  flex-basis: 100%;
 }
 
 .maintenance-actions,
@@ -934,7 +966,8 @@ button:disabled {
   .manage-panel #addPane,
   .manage-panel .card-maintenance,
   .manage-panel .ai-agent,
-  .manage-panel .add-form {
+  .manage-panel .add-form,
+  .sync-panel {
     display: none;
   }
 

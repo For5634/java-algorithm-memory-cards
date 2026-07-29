@@ -262,6 +262,19 @@
           </div>
 
           <div id="dataTools" class="data-tools hidden">
+            <section class="sync-panel" aria-label="同步到手机">
+              <div class="section-title">同步到手机</div>
+              <button id="syncPhoneButton" class="primary-button full" type="button">生成手机同步二维码</button>
+              <div id="syncResult" class="sync-result hidden">
+                <div class="sync-qr" id="syncQr" aria-label="手机同步二维码"></div>
+                <label>
+                  手机访问地址
+                  <input id="syncUrlInput" readonly>
+                </label>
+                <div class="sync-targets" id="syncTargets"></div>
+                <p class="note" id="syncStatus">手机和电脑连接同一 Wi-Fi 后扫码导入，二维码 10 分钟内有效。</p>
+              </div>
+            </section>
             <button id="exportButton" class="ghost-button full" type="button">导出卡片和进度</button>
             <label class="file-button">
               导入 JSON

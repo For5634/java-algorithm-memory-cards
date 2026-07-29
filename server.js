@@ -1,9 +1,13 @@
 const http = require("http");
 const fs = require("fs");
+const crypto = require("crypto");
+const os = require("os");
 const path = require("path");
 
 const PORT = Number(process.env.PORT || 8787);
 const ROOT = __dirname;
+const SYNC_TTL_MS = 10 * 60 * 1000;
+const syncStore = new Map();
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -16,8 +20,25 @@ loadLocalEnv();
 
 const server = http.createServer(async (req, res) => {
   try {
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+
     if (req.method === "POST" && req.url === "/api/generate-card") {
       await handleGenerateCard(req, res);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/sync-info") {
+      sendJson(res, 200, getSyncInfo(req));
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/sync") {
+      await handleCreateSync(req, res);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname.startsWith("/api/sync/")) {
+      handleReadSync(url.pathname.split("/").pop(), res);
       return;
     }
 
@@ -26,7 +47,6 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const url = new URL(req.url, "http://localhost");
     const requested = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
     const filePath = path.normalize(path.join(ROOT, requested));
     if (!filePath.startsWith(ROOT)) {
@@ -45,6 +65,64 @@ const server = http.createServer(async (req, res) => {
     send(res, 500, JSON.stringify({ error: error.message }), "application/json; charset=utf-8");
   }
 });
+
+async function handleCreateSync(req, res) {
+  const body = await readBody(req);
+  const payload = JSON.parse(body || "{}");
+  if (!payload || typeof payload !== "object") {
+    sendJson(res, 400, { error: "同步数据格式不正确。" });
+    return;
+  }
+
+  cleanupSyncStore();
+  const token = crypto.randomBytes(6).toString("base64url");
+  const expiresAt = Date.now() + SYNC_TTL_MS;
+  syncStore.set(token, { payload, expiresAt });
+  sendJson(res, 200, { token, expiresAt, ttlSeconds: SYNC_TTL_MS / 1000 });
+}
+
+function handleReadSync(token, res) {
+  cleanupSyncStore();
+  const item = syncStore.get(token);
+  if (!item) {
+    sendJson(res, 404, { error: "同步二维码已过期，请在电脑端重新生成。" });
+    return;
+  }
+  sendJson(res, 200, { payload: item.payload, expiresAt: item.expiresAt });
+}
+
+function getSyncInfo(req) {
+  const urls = getLanAddresses().map((item) => `http://${item.address}:${PORT}/app.html`);
+  const hostUrl = req.headers.host ? `http://${req.headers.host}/app.html` : "";
+  return {
+    appUrls: urls.length ? urls : [hostUrl || `http://localhost:${PORT}/app.html`],
+    expiresInSeconds: SYNC_TTL_MS / 1000
+  };
+}
+
+function getLanAddresses() {
+  const addresses = [];
+  const interfaces = os.networkInterfaces();
+  Object.entries(interfaces).forEach(([name, items]) => {
+    (items || []).forEach((item) => {
+      if (item.family === "IPv4" && !item.internal) {
+        addresses.push({ address: item.address, name, virtual: isVirtualInterface(name) });
+      }
+    });
+  });
+  return addresses.sort((a, b) => Number(a.virtual) - Number(b.virtual) || a.address.localeCompare(b.address));
+}
+
+function isVirtualInterface(name) {
+  return /virtual|vmware|vbox|wsl|hyper-v|vethernet|docker|loopback|tailscale|zerotier/i.test(name);
+}
+
+function cleanupSyncStore() {
+  const now = Date.now();
+  for (const [token, item] of syncStore.entries()) {
+    if (item.expiresAt <= now) syncStore.delete(token);
+  }
+}
 
 async function handleGenerateCard(req, res) {
   const body = await readBody(req);
@@ -80,7 +158,7 @@ function readBody(req) {
     let body = "";
     req.on("data", (chunk) => {
       body += chunk;
-      if (body.length > 1024 * 1024) {
+      if (body.length > 5 * 1024 * 1024) {
         req.destroy();
         reject(new Error("Request body too large"));
       }
@@ -95,8 +173,15 @@ function send(res, status, body, contentType) {
   res.end(body);
 }
 
+function sendJson(res, status, payload) {
+  send(res, status, JSON.stringify(payload), "application/json; charset=utf-8");
+}
+
 server.listen(PORT, () => {
   console.log(`Java algorithm flashcards: http://localhost:${PORT}`);
+  getLanAddresses().forEach((item) => {
+    console.log(`Phone sync on Wi-Fi: http://${item.address}:${PORT}/app.html`);
+  });
 });
 
 function loadLocalEnv() {

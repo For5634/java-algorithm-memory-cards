@@ -216,6 +216,12 @@
     aiNoteInput: document.getElementById("aiNoteInput"),
     generateDraftButton: document.getElementById("generateDraftButton"),
     aiStatus: document.getElementById("aiStatus"),
+    syncPhoneButton: document.getElementById("syncPhoneButton"),
+    syncResult: document.getElementById("syncResult"),
+    syncQr: document.getElementById("syncQr"),
+    syncUrlInput: document.getElementById("syncUrlInput"),
+    syncTargets: document.getElementById("syncTargets"),
+    syncStatus: document.getElementById("syncStatus"),
     exportButton: document.getElementById("exportButton"),
     importInput: document.getElementById("importInput"),
     deleteCustomButton: document.getElementById("deleteCustomButton"),
@@ -965,15 +971,20 @@
     els.aiStatus.textContent = text;
   }
 
-  function exportData() {
-    const payload = {
+  function buildLocalDataPayload() {
+    return {
       version: 2,
       exportedAt: new Date().toISOString(),
       customCards: state.cards.filter((card) => card.custom),
       overrides: state.overrides,
       deletedIds: state.deletedIds,
-      progress: state.progress
+      progress: state.progress,
+      daily: state.daily
     };
+  }
+
+  function exportData() {
+    const payload = buildLocalDataPayload();
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -983,33 +994,352 @@
     URL.revokeObjectURL(url);
   }
 
+  function applyImportedPayload(payload) {
+    const importedCards = Array.isArray(payload.customCards) ? payload.customCards : [];
+    const existing = new Map(state.cards.filter((card) => card.custom).map((card) => [card.id, card]));
+    importedCards.forEach((card) => existing.set(card.id || "custom-" + Date.now(), normalizeCard({ ...card, custom: true })));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(existing.values())));
+    if (payload.progress && typeof payload.progress === "object") {
+      state.progress = { ...state.progress, ...payload.progress };
+      saveProgress();
+    }
+    if (payload.overrides && typeof payload.overrides === "object") {
+      state.overrides = { ...state.overrides, ...payload.overrides };
+      saveOverrides();
+    }
+    if (Array.isArray(payload.deletedIds)) {
+      state.deletedIds = Array.from(new Set([...state.deletedIds, ...payload.deletedIds]));
+      saveDeletedIds();
+    }
+    if (payload.daily && typeof payload.daily === "object") {
+      state.daily = {
+        date: payload.daily.date || "",
+        usedIds: Array.isArray(payload.daily.usedIds) ? payload.daily.usedIds : [],
+        deckIds: Array.isArray(payload.daily.deckIds) ? payload.daily.deckIds : []
+      };
+      saveDaily();
+    }
+  }
+
   function importData(file) {
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const payload = JSON.parse(reader.result);
-        const importedCards = Array.isArray(payload.customCards) ? payload.customCards : [];
-        const existing = new Map(state.cards.filter((card) => card.custom).map((card) => [card.id, card]));
-        importedCards.forEach((card) => existing.set(card.id || "custom-" + Date.now(), normalizeCard({ ...card, custom: true })));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(existing.values())));
-        if (payload.progress && typeof payload.progress === "object") {
-          state.progress = { ...state.progress, ...payload.progress };
-          saveProgress();
-        }
-        if (payload.overrides && typeof payload.overrides === "object") {
-          state.overrides = { ...state.overrides, ...payload.overrides };
-          saveOverrides();
-        }
-        if (Array.isArray(payload.deletedIds)) {
-          state.deletedIds = Array.from(new Set([...state.deletedIds, ...payload.deletedIds]));
-          saveDeletedIds();
-        }
+        applyImportedPayload(payload);
         load();
       } catch (error) {
         alert("导入失败：JSON 格式不正确。");
       }
     };
     reader.readAsText(file);
+  }
+
+  async function startPhoneSync() {
+    if (!isLocalSyncService()) {
+      setSyncStatus("同步到手机需要在本地运行 node server.js，并打开 http://localhost:8787/app.html。");
+      els.syncResult.classList.remove("hidden");
+      return;
+    }
+
+    setSyncBusy(true);
+    setSyncStatus("正在生成同步二维码...");
+    els.syncResult.classList.remove("hidden");
+
+    try {
+      const info = await fetchJson("/api/sync-info");
+      const created = await postJson("/api/sync", buildLocalDataPayload());
+      const syncUrls = buildSyncUrls(info, created.token);
+      const syncUrl = syncUrls[0];
+      els.syncUrlInput.value = syncUrl;
+      renderSyncQr(syncUrl);
+      renderSyncTargets(syncUrls);
+      setSyncStatus(`二维码 10 分钟内有效。手机和电脑连接同一 Wi-Fi 后扫码导入。`);
+    } catch (error) {
+      setSyncStatus("生成失败：" + error.message);
+      els.syncQr.innerHTML = "";
+      els.syncUrlInput.value = "";
+      els.syncTargets.innerHTML = "";
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+
+  async function importSyncFromUrl() {
+    const token = new URLSearchParams(location.search).get("sync");
+    if (!token) return;
+
+    try {
+      const data = await fetchJson(`/api/sync/${encodeURIComponent(token)}`);
+      applyImportedPayload(data.payload || data);
+      history.replaceState(null, "", location.pathname);
+      alert("同步完成：电脑端卡片和复习进度已经导入当前手机浏览器。");
+    } catch (error) {
+      alert("同步失败：" + error.message + "。请在电脑端重新生成二维码，并确认手机和电脑在同一 Wi-Fi。");
+    }
+  }
+
+  function buildSyncUrls(info, token) {
+    const appUrls = Array.isArray(info.appUrls) && info.appUrls.length
+      ? info.appUrls
+      : [`${location.origin}/app.html`];
+    return appUrls.map((appUrl) => {
+      const url = new URL(appUrl);
+      url.searchParams.set("sync", token);
+      return url.toString();
+    });
+  }
+
+  function renderSyncTargets(urls) {
+    els.syncTargets.innerHTML = "";
+    if (urls.length <= 1) return;
+    const title = document.createElement("p");
+    title.className = "note";
+    title.textContent = "扫码打不开时，切换下面的备用地址再扫。";
+    els.syncTargets.appendChild(title);
+    urls.forEach((url, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ghost-button compact-button";
+      button.textContent = `地址 ${index + 1}`;
+      button.addEventListener("click", () => {
+        els.syncUrlInput.value = url;
+        renderSyncQr(url);
+        setSyncStatus("二维码已切换。请用手机重新扫码。");
+      });
+      els.syncTargets.appendChild(button);
+    });
+  }
+
+  function isLocalSyncService() {
+    return location.protocol === "http:" && !location.hostname.endsWith("github.io");
+  }
+
+  async function fetchJson(url) {
+    const response = await fetch(url);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `请求失败：${response.status}`);
+    return data;
+  }
+
+  async function postJson(url, payload) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `请求失败：${response.status}`);
+    return data;
+  }
+
+  function setSyncBusy(isBusy) {
+    els.syncPhoneButton.disabled = isBusy;
+    els.syncPhoneButton.textContent = isBusy ? "正在生成..." : "生成手机同步二维码";
+  }
+
+  function setSyncStatus(text) {
+    els.syncStatus.textContent = text;
+  }
+
+  function renderSyncQr(url) {
+    try {
+      els.syncQr.innerHTML = makeQrSvg(url);
+    } catch (error) {
+      els.syncQr.innerHTML = "";
+      setSyncStatus("同步链接已生成，但二维码生成失败。可以手动复制地址到手机浏览器打开。");
+    }
+  }
+
+  function makeQrSvg(text) {
+    const matrix = createQrMatrix(text);
+    const border = 4;
+    const size = matrix.length;
+    const viewSize = size + border * 2;
+    const cells = [];
+    matrix.forEach((row, y) => {
+      row.forEach((dark, x) => {
+        if (dark) cells.push(`M${x + border},${y + border}h1v1h-1z`);
+      });
+    });
+    return `<svg viewBox="0 0 ${viewSize} ${viewSize}" role="img" aria-label="手机同步二维码" xmlns="http://www.w3.org/2000/svg"><rect width="${viewSize}" height="${viewSize}" fill="#fff"/><path d="${cells.join("")}" fill="#20242c"/></svg>`;
+  }
+
+  function createQrMatrix(text) {
+    const version = 5;
+    const size = version * 4 + 17;
+    const dataCodewords = 108;
+    const eccCodewords = 26;
+    const data = encodeQrData(text, dataCodewords);
+    const ecc = reedSolomonRemainder(data, reedSolomonDivisor(eccCodewords));
+    const codewords = data.concat(ecc);
+    const modules = Array.from({ length: size }, () => Array(size).fill(false));
+    const isFunction = Array.from({ length: size }, () => Array(size).fill(false));
+
+    const setFunction = (x, y, dark) => {
+      if (x < 0 || y < 0 || x >= size || y >= size) return;
+      modules[y][x] = dark;
+      isFunction[y][x] = true;
+    };
+
+    const drawFinder = (cx, cy) => {
+      for (let dy = -4; dy <= 4; dy++) {
+        for (let dx = -4; dx <= 4; dx++) {
+          const dist = Math.max(Math.abs(dx), Math.abs(dy));
+          setFunction(cx + dx, cy + dy, dist !== 2 && dist !== 4);
+        }
+      }
+    };
+
+    drawFinder(3, 3);
+    drawFinder(size - 4, 3);
+    drawFinder(3, size - 4);
+    for (let i = 0; i < size; i++) {
+      if (!isFunction[6][i]) setFunction(i, 6, i % 2 === 0);
+      if (!isFunction[i][6]) setFunction(6, i, i % 2 === 0);
+    }
+    drawAlignmentPattern(30, 30, setFunction);
+    setFunction(8, size - 8, true);
+    drawFormatBits(0, size, modules, isFunction, setFunction);
+    placeQrData(codewords, modules, isFunction);
+    applyQrMask(0, modules, isFunction);
+    drawFormatBits(0, size, modules, isFunction, setFunction);
+    return modules;
+  }
+
+  function drawAlignmentPattern(cx, cy, setFunction) {
+    for (let dy = -2; dy <= 2; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const dist = Math.max(Math.abs(dx), Math.abs(dy));
+        setFunction(cx + dx, cy + dy, dist !== 1);
+      }
+    }
+  }
+
+  function drawFormatBits(mask, size, modules, isFunction, setFunction) {
+    const bits = getQrFormatBits(mask);
+    for (let i = 0; i <= 5; i++) setFunction(8, i, getBit(bits, i));
+    setFunction(8, 7, getBit(bits, 6));
+    setFunction(8, 8, getBit(bits, 7));
+    setFunction(7, 8, getBit(bits, 8));
+    for (let i = 9; i < 15; i++) setFunction(14 - i, 8, getBit(bits, i));
+    for (let i = 0; i < 8; i++) setFunction(size - 1 - i, 8, getBit(bits, i));
+    for (let i = 8; i < 15; i++) setFunction(8, size - 15 + i, getBit(bits, i));
+    modules[size - 8][8] = true;
+    isFunction[size - 8][8] = true;
+  }
+
+  function getQrFormatBits(mask) {
+    let data = (1 << 3) | mask;
+    let rem = data;
+    for (let i = 0; i < 10; i++) {
+      rem = (rem << 1) ^ (((rem >>> 9) & 1) ? 0x537 : 0);
+    }
+    return ((data << 10) | rem) ^ 0x5412;
+  }
+
+  function encodeQrData(text, dataCodewords) {
+    const bytes = Array.from(new TextEncoder().encode(text));
+    if (bytes.length > 106) throw new Error("同步链接过长");
+    const bits = [];
+    appendBits(0x4, 4, bits);
+    appendBits(bytes.length, 8, bits);
+    bytes.forEach((byte) => appendBits(byte, 8, bits));
+    const capacity = dataCodewords * 8;
+    appendBits(0, Math.min(4, capacity - bits.length), bits);
+    while (bits.length % 8) bits.push(false);
+    const result = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let value = 0;
+      for (let j = 0; j < 8; j++) value = (value << 1) | (bits[i + j] ? 1 : 0);
+      result.push(value);
+    }
+    for (let pad = 0; result.length < dataCodewords; pad ^= 1) {
+      result.push(pad ? 0x11 : 0xec);
+    }
+    return result;
+  }
+
+  function appendBits(value, length, bits) {
+    for (let i = length - 1; i >= 0; i--) bits.push(((value >>> i) & 1) !== 0);
+  }
+
+  function placeQrData(codewords, modules, isFunction) {
+    const size = modules.length;
+    let bitIndex = 0;
+    for (let right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right--;
+      for (let vert = 0; vert < size; vert++) {
+        const y = ((right + 1) & 2) === 0 ? size - 1 - vert : vert;
+        for (let j = 0; j < 2; j++) {
+          const x = right - j;
+          if (!isFunction[y][x] && bitIndex < codewords.length * 8) {
+            modules[y][x] = getBit(codewords[bitIndex >>> 3], 7 - (bitIndex & 7));
+            bitIndex++;
+          }
+        }
+      }
+    }
+  }
+
+  function applyQrMask(mask, modules, isFunction) {
+    modules.forEach((row, y) => {
+      row.forEach((_, x) => {
+        if (!isFunction[y][x] && getQrMask(mask, x, y)) modules[y][x] = !modules[y][x];
+      });
+    });
+  }
+
+  function getQrMask(mask, x, y) {
+    return [
+      (x + y) % 2 === 0,
+      y % 2 === 0,
+      x % 3 === 0,
+      (x + y) % 3 === 0,
+      (Math.floor(y / 2) + Math.floor(x / 3)) % 2 === 0,
+      ((x * y) % 2) + ((x * y) % 3) === 0,
+      (((x * y) % 2) + ((x * y) % 3)) % 2 === 0,
+      (((x + y) % 2) + ((x * y) % 3)) % 2 === 0
+    ][mask];
+  }
+
+  function reedSolomonDivisor(degree) {
+    const result = Array(degree).fill(0);
+    result[degree - 1] = 1;
+    let root = 1;
+    for (let i = 0; i < degree; i++) {
+      for (let j = 0; j < degree; j++) {
+        result[j] = gfMultiply(result[j], root);
+        if (j + 1 < degree) result[j] ^= result[j + 1];
+      }
+      root = gfMultiply(root, 0x02);
+    }
+    return result;
+  }
+
+  function reedSolomonRemainder(data, divisor) {
+    const result = Array(divisor.length).fill(0);
+    data.forEach((byte) => {
+      const factor = byte ^ result.shift();
+      result.push(0);
+      divisor.forEach((coef, index) => {
+        result[index] ^= gfMultiply(coef, factor);
+      });
+    });
+    return result;
+  }
+
+  function gfMultiply(x, y) {
+    let z = 0;
+    for (let i = 7; i >= 0; i--) {
+      z = (z << 1) ^ ((z >>> 7) * 0x11d);
+      z ^= ((y >>> i) & 1) * x;
+    }
+    return z & 0xff;
+  }
+
+  function getBit(value, index) {
+    return ((value >>> index) & 1) !== 0;
   }
 
   function deleteCurrentCard() {
@@ -1181,6 +1511,7 @@
     saveCard(new FormData(els.addCardForm));
   });
 
+  els.syncPhoneButton.addEventListener("click", startPhoneSync);
   els.exportButton.addEventListener("click", exportData);
 
   els.importInput.addEventListener("change", (event) => {
@@ -1211,5 +1542,10 @@
     if (event.key === "4") mark("mastered");
   });
 
-  load();
+  async function init() {
+    await importSyncFromUrl();
+    load();
+  }
+
+  init();
 })();
