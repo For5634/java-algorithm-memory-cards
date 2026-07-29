@@ -7,6 +7,118 @@
   const DAILY_KEY = "java-algorithm-daily:v1";
   const AI_CONFIG_KEY = "java-algorithm-ai-config:v1";
   const TOPICS = ["哈希", "双指针", "滑动窗口", "栈", "动态规划", "数组", "矩阵", "链表", "堆", "二叉树", "图论", "回溯", "二分", "贪心", "多维动态规划", "技巧", "高频面试"];
+  const LEETCODE_SLUGS = {
+    1: "two-sum",
+    2: "add-two-numbers",
+    3: "longest-substring-without-repeating-characters",
+    4: "median-of-two-sorted-arrays",
+    5: "longest-palindromic-substring",
+    7: "reverse-integer",
+    8: "string-to-integer-atoi",
+    9: "palindrome-number",
+    10: "regular-expression-matching",
+    11: "container-with-most-water",
+    13: "roman-to-integer",
+    15: "3sum",
+    17: "letter-combinations-of-a-phone-number",
+    19: "remove-nth-node-from-end-of-list",
+    20: "valid-parentheses",
+    21: "merge-two-sorted-lists",
+    22: "generate-parentheses",
+    23: "merge-k-sorted-lists",
+    24: "swap-nodes-in-pairs",
+    25: "reverse-nodes-in-k-group",
+    31: "next-permutation",
+    32: "longest-valid-parentheses",
+    33: "search-in-rotated-sorted-array",
+    34: "find-first-and-last-position-of-element-in-sorted-array",
+    35: "search-insert-position",
+    39: "combination-sum",
+    40: "combination-sum-ii",
+    41: "first-missing-positive",
+    42: "trapping-rain-water",
+    45: "jump-game-ii",
+    46: "permutations",
+    48: "rotate-image",
+    49: "group-anagrams",
+    51: "n-queens",
+    53: "maximum-subarray",
+    54: "spiral-matrix",
+    55: "jump-game",
+    56: "merge-intervals",
+    62: "unique-paths",
+    64: "minimum-path-sum",
+    70: "climbing-stairs",
+    72: "edit-distance",
+    73: "set-matrix-zeroes",
+    74: "search-a-2d-matrix",
+    75: "sort-colors",
+    76: "minimum-window-substring",
+    78: "subsets",
+    79: "word-search",
+    84: "largest-rectangle-in-histogram",
+    94: "binary-tree-inorder-traversal",
+    98: "validate-binary-search-tree",
+    100: "same-tree",
+    101: "symmetric-tree",
+    102: "binary-tree-level-order-traversal",
+    104: "maximum-depth-of-binary-tree",
+    105: "construct-binary-tree-from-preorder-and-inorder-traversal",
+    108: "convert-sorted-array-to-binary-search-tree",
+    114: "flatten-binary-tree-to-linked-list",
+    118: "pascals-triangle",
+    121: "best-time-to-buy-and-sell-stock",
+    124: "binary-tree-maximum-path-sum",
+    128: "longest-consecutive-sequence",
+    131: "palindrome-partitioning",
+    136: "single-number",
+    138: "copy-list-with-random-pointer",
+    139: "word-break",
+    141: "linked-list-cycle",
+    142: "linked-list-cycle-ii",
+    146: "lru-cache",
+    148: "sort-list",
+    152: "maximum-product-subarray",
+    153: "find-minimum-in-rotated-sorted-array",
+    155: "min-stack",
+    160: "intersection-of-two-linked-lists",
+    169: "majority-element",
+    189: "rotate-array",
+    198: "house-robber",
+    199: "binary-tree-right-side-view",
+    200: "number-of-islands",
+    206: "reverse-linked-list",
+    207: "course-schedule",
+    208: "implement-trie-prefix-tree",
+    215: "kth-largest-element-in-an-array",
+    226: "invert-binary-tree",
+    230: "kth-smallest-element-in-a-bst",
+    234: "palindrome-linked-list",
+    236: "lowest-common-ancestor-of-a-binary-tree",
+    238: "product-of-array-except-self",
+    239: "sliding-window-maximum",
+    240: "search-a-2d-matrix-ii",
+    279: "perfect-squares",
+    283: "move-zeroes",
+    287: "find-the-duplicate-number",
+    295: "find-median-from-data-stream",
+    300: "longest-increasing-subsequence",
+    322: "coin-change",
+    347: "top-k-frequent-elements",
+    394: "decode-string",
+    416: "partition-equal-subset-sum",
+    437: "path-sum-iii",
+    438: "find-all-anagrams-in-a-string",
+    543: "diameter-of-binary-tree",
+    560: "subarray-sum-equals-k",
+    704: "binary-search",
+    739: "daily-temperatures",
+    763: "partition-labels",
+    875: "koko-eating-bananas",
+    994: "rotting-oranges",
+    1011: "capacity-to-ship-packages-within-d-days",
+    1143: "longest-common-subsequence"
+  };
 
   const DEFAULT_CARDS = [
     {
@@ -175,6 +287,8 @@
     cardDifficulty: document.getElementById("cardDifficulty"),
     cardSource: document.getElementById("cardSource"),
     cardSourceFront: document.getElementById("cardSourceFront"),
+    officialLinkFront: document.getElementById("officialLinkFront"),
+    officialLinkBack: document.getElementById("officialLinkBack"),
     cardTitle: document.getElementById("cardTitle"),
     cardFront: document.getElementById("cardFront"),
     cardHint: document.getElementById("cardHint"),
@@ -302,6 +416,41 @@
   function getLcNumber(text) {
     const match = String(text || "").match(/LC\s*(\d+)/i);
     return match ? match[1] : "";
+  }
+
+  function getOfficialProblemLink(card) {
+    const customUrl = String(card.officialUrl || card.url || card.link || "").trim();
+    if (/^https?:\/\//i.test(customUrl)) {
+      return { url: customUrl, label: "LeetCode 原题" };
+    }
+    const number = getLcNumber([card.title, card.source, card.related].filter(Boolean).join(" "));
+    if (!number) return null;
+    const slug = LEETCODE_SLUGS[number];
+    if (slug) {
+      return {
+        url: `https://leetcode.cn/problems/${slug}/`,
+        label: "LeetCode 原题"
+      };
+    }
+    return {
+      url: `https://leetcode.cn/problemset/?search=${encodeURIComponent(number)}`,
+      label: "LeetCode 搜索"
+    };
+  }
+
+  function renderOfficialLinks(card) {
+    const link = card ? getOfficialProblemLink(card) : null;
+    [els.officialLinkFront, els.officialLinkBack].forEach((element) => {
+      if (!element) return;
+      element.classList.toggle("hidden", !link);
+      if (!link) {
+        element.removeAttribute("href");
+        return;
+      }
+      element.href = link.url;
+      element.textContent = link.label;
+      element.title = "打开 LeetCode 官网题目";
+    });
   }
 
   function saveAiConfig() {
@@ -610,6 +759,7 @@
     els.cardTopic.textContent = card.topic;
     els.cardDifficulty.textContent = card.difficulty || "未分级";
     els.cardSource.textContent = card.source || "自定义";
+    renderOfficialLinks(card);
     els.cardTitle.textContent = card.title;
     els.cardFront.textContent = card.front;
     els.cardHint.textContent = card.hint || "先用自己的话说出思路，再看答案。";
@@ -645,6 +795,7 @@
     els.cardTopic.textContent = "专题";
     els.cardDifficulty.textContent = "难度";
     els.cardSource.textContent = "来源";
+    renderOfficialLinks(null);
     els.cardShortAnswer.textContent = "暂无内容。";
     els.cardComplexity.textContent = "暂无内容。";
     els.cardDetails.textContent = "暂无内容。";

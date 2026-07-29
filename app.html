@@ -76,7 +76,10 @@
         <section class="study-zone" id="studyArea">
           <article class="flashcard" id="flashcard" tabindex="0" aria-live="polite">
             <div class="card-side card-front">
-              <p class="front-source" id="cardSourceFront">来源</p>
+              <div class="front-toolbar">
+                <p class="front-source" id="cardSourceFront">来源</p>
+                <a class="official-link hidden" id="officialLinkFront" href="#" target="_blank" rel="noreferrer">LeetCode 原题</a>
+              </div>
               <h2 id="cardTitle">选择一张卡片开始</h2>
               <p class="prompt" id="cardFront">用搜索、标签或随机抽卡开始复习。</p>
               <div class="hint-box">
@@ -91,6 +94,7 @@
                 <span id="cardTopic">专题</span>
                 <span id="cardDifficulty">难度</span>
                 <span id="cardSource">来源</span>
+                <a class="official-link hidden" id="officialLinkBack" href="#" target="_blank" rel="noreferrer">LeetCode 原题</a>
               </div>
               <div class="answer-grid">
                 <section>
