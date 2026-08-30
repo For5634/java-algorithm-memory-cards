@@ -549,6 +549,7 @@
       code: "",
       complexity: "",
       related: "",
+      officialUrl: "",
       ...card,
       custom: Boolean(card.custom)
     };
@@ -1161,7 +1162,8 @@
       details: formData.get("details").trim(),
       code: formData.get("code").trim(),
       complexity: formData.get("complexity").trim(),
-      related: formData.get("related").trim()
+      related: formData.get("related").trim(),
+      officialUrl: formData.get("officialUrl").trim()
     });
   }
 
@@ -1269,7 +1271,8 @@
       "10. complexity 必须写清时间复杂度和空间复杂度。",
       "11. code 字段放 Java 代码，不要写伪代码；如果用户给了代码，优先保留并可做少量整理。",
       "12. tags 是字符串数组。",
-      "13. 只返回 JSON，字段为 title, topic, front, hint, shortAnswer, details, code, complexity, tags, related。",
+      "13. 如果题目有明确 LeetCode 题号，可填写 officialUrl，例如 https://leetcode.cn/problems/container-with-most-water/；不确定就留空。",
+      "14. 只返回 JSON，字段为 title, topic, front, hint, shortAnswer, details, code, complexity, tags, related, officialUrl。",
       "",
       "题目：",
       problem || "未提供",
@@ -1314,6 +1317,7 @@
     form.elements.complexity.value = draft.complexity || "";
     form.elements.tags.value = (draft.tags || []).join(", ");
     form.elements.related.value = draft.related || "";
+    form.elements.officialUrl.value = draft.officialUrl || "";
   }
 
   function ensureTopicOption(topic) {
@@ -1335,7 +1339,8 @@
       code: card.code,
       complexity: card.complexity,
       tags: card.tags || [],
-      related: card.related
+      related: card.related,
+      officialUrl: card.officialUrl
     });
   }
 
