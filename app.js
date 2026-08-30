@@ -414,6 +414,7 @@
     statsExpanded: false,
     flipped: false,
     hintVisible: false,
+    lastRating: null,
     aiConfig: { model: "deepseek-v4-pro" }
   };
 
@@ -469,6 +470,8 @@
     hardButton: document.getElementById("hardButton"),
     goodButton: document.getElementById("goodButton"),
     masteredButton: document.getElementById("masteredButton"),
+    undoRatingButton: document.getElementById("undoRatingButton"),
+    mobileUndoRatingButton: document.getElementById("mobileUndoRatingButton"),
     addTab: document.getElementById("addTab"),
     dataTab: document.getElementById("dataTab"),
     addPane: document.getElementById("addPane"),
@@ -581,7 +584,7 @@
     if (/^https?:\/\//i.test(customUrl)) {
       return { url: customUrl, label: "LeetCode 原题" };
     }
-    const number = getLcNumber([card.title, card.source, card.related].filter(Boolean).join(" "));
+    const number = getLcNumber([card.title, card.source].filter(Boolean).join(" "));
     if (!number) return null;
     const slug = LEETCODE_SLUGS[number];
     if (slug) {
@@ -640,6 +643,15 @@
     return ["全部集合", ...ordered, ...rest];
   }
 
+  function getCollectionCounts() {
+    return state.cards.reduce((counts, card) => {
+      const name = getCollectionName(card);
+      counts[name] = (counts[name] || 0) + 1;
+      counts["全部集合"] = (counts["全部集合"] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
   function getFilteredCards() {
     const query = state.query.trim().toLowerCase();
     const dailyIds = new Set(state.dailyMode ? state.daily.deckIds : []);
@@ -687,15 +699,18 @@
     renderDailyStatus();
     renderCardList();
     renderActiveCard();
+    renderUndoActions();
   }
 
   function renderCollectionFilters() {
     els.collectionFilters.innerHTML = "";
+    const counts = getCollectionCounts();
     getCollections().forEach((collection) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "tag-button collection-button" + (collection === state.selectedCollection ? " active" : "");
-      button.textContent = collection;
+      button.innerHTML = `<span>${escapeHtml(collection)}</span><small>${counts[collection] || 0}</small>`;
+      button.setAttribute("aria-label", `${collection}，${counts[collection] || 0} 张`);
       button.addEventListener("click", () => {
         state.selectedCollection = collection;
         state.dailyMode = false;
@@ -1007,6 +1022,16 @@
     els.mobileFlipButton.hidden = !hasCard || state.flipped;
     els.mobileReviewActions.hidden = !hasCard || !state.flipped;
     els.mobileFlipButton.textContent = state.flipped ? "回到题面" : "看答案";
+    renderUndoActions();
+  }
+
+  function renderUndoActions() {
+    const canUndo = Boolean(state.lastRating);
+    [els.undoRatingButton, els.mobileUndoRatingButton].forEach((button) => {
+      if (!button) return;
+      button.classList.toggle("hidden", !canUndo);
+      button.disabled = !canUndo;
+    });
   }
 
   function flipActiveCard() {
@@ -1072,14 +1097,37 @@
       render();
       return;
     }
-    const current = state.progress[state.activeId] || { reviews: 0 };
-    state.progress[state.activeId] = {
+    const currentId = state.activeId;
+    const current = state.progress[currentId] || { reviews: 0 };
+    state.lastRating = {
+      cardId: currentId,
+      previousProgress: state.progress[currentId] ? { ...state.progress[currentId] } : null
+    };
+    state.progress[currentId] = {
       status,
       reviews: (current.reviews || 0) + 1,
       updatedAt: new Date().toISOString()
     };
     saveProgress();
     advanceToNextCard(previousOrder);
+    render();
+  }
+
+  function undoLastRating() {
+    if (!state.lastRating) return;
+    const { cardId, previousProgress } = state.lastRating;
+    if (previousProgress) {
+      state.progress[cardId] = previousProgress;
+    } else {
+      delete state.progress[cardId];
+    }
+    state.lastRating = null;
+    if (state.cards.some((card) => card.id === cardId)) {
+      state.activeId = cardId;
+    }
+    state.flipped = false;
+    state.hintVisible = false;
+    saveProgress();
     render();
   }
 
@@ -1853,10 +1901,12 @@
   els.hardButton.addEventListener("click", () => mark("hard"));
   els.goodButton.addEventListener("click", () => mark("good"));
   els.masteredButton.addEventListener("click", () => mark("mastered"));
+  els.undoRatingButton.addEventListener("click", undoLastRating);
   els.mobileAgainButton.addEventListener("click", () => mark("again"));
   els.mobileHardButton.addEventListener("click", () => mark("hard"));
   els.mobileGoodButton.addEventListener("click", () => mark("good"));
   els.mobileMasteredButton.addEventListener("click", () => mark("mastered"));
+  els.mobileUndoRatingButton.addEventListener("click", undoLastRating);
 
   els.addTab.addEventListener("click", () => {
     els.addTab.classList.add("active");

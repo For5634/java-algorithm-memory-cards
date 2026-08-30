@@ -179,13 +179,30 @@ button:focus-visible,
 }
 
 .collection-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   background: #f9fafb;
   font-weight: 700;
+}
+
+.collection-button small {
+  border-radius: 999px;
+  background: #eef1f5;
+  color: var(--muted);
+  padding: 1px 6px;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .collection-button.active {
   background: var(--ink);
   border-color: var(--ink);
+  color: #fff;
+}
+
+.collection-button.active small {
+  background: rgba(255, 255, 255, 0.18);
   color: #fff;
 }
 
@@ -560,6 +577,16 @@ pre code {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   margin: 0;
+}
+
+.review-utility {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.review-utility .ghost-button {
+  color: var(--muted);
 }
 
 .review-actions button,
@@ -1141,6 +1168,10 @@ button:disabled {
     display: none;
   }
 
+  .review-utility {
+    display: none;
+  }
+
   .stats-panel {
     display: none;
   }
@@ -1228,6 +1259,13 @@ button:disabled {
   .mobile-review-actions button:nth-child(4) {
     border-color: rgba(59, 124, 91, 0.45);
     color: var(--green);
+  }
+
+  #mobileUndoRatingButton {
+    min-height: 34px;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 13px;
   }
 
   .landing-shell {
