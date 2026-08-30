@@ -243,6 +243,159 @@
     }
   ];
 
+  const FAMILIAR_CARDS = [
+    {
+      id: "familiar-card-flow",
+      title: "熟悉 01 标准复习流程",
+      topic: "高频面试",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "复习流程", "自测"],
+      front: "拿到一张算法卡时，如何在不急着看答案的情况下完成一次有效自测？请按题面、示例、约束、边界四个角度回忆。",
+      hint: "先说输入输出，再说关键状态，最后说边界。",
+      shortAnswer: "先用自己的话复述题目，再根据示例手推一遍。接着回忆要维护的状态或数据结构，最后检查空输入、重复值、越界、溢出等边界。翻面后只对照差距，不要直接背代码。",
+      details: "这一组卡不是为了背某一道题，而是让你熟悉卡片结构。正面只做回忆触发，提示需要手动点开，答案面再看方法、复杂度和代码。评分时不要按“看懂了”评分，而要按“刚才是否能独立说出来”评分。",
+      code: "void review(Card card) {\n    read(card.front);\n    speak(\"input, output, example, edge cases\");\n    if (needHint) read(card.hint);\n    flip();\n    compareWith(card.shortAnswer, card.details, card.code);\n    rateByRecall();\n}",
+      complexity: "每张卡建议 1 到 3 分钟；薄弱卡优先复盘。",
+      related: "卡面熟悉，Anki 式主动回忆"
+    },
+    {
+      id: "familiar-problem-reading",
+      title: "熟悉 02 题面拆解",
+      topic: "高频面试",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "读题", "边界"],
+      front: "看到一段 LeetCode 题面时，如何快速拆出输入、输出、隐含条件和最容易错的边界？",
+      hint: "把题目改写成函数契约。",
+      shortAnswer: "先确定函数输入类型和返回值，再找题目里的“必须、恰好、至少、至多、不同、连续、有序、原地”等关键词。示例用来验证流程，边界用来验证鲁棒性。",
+      details: "很多错题不是算法不会，而是题意没收紧。比如“连续”通常意味着子数组/子串，“不重复”可能需要去重策略，“原地”限制额外空间，“恰好”通常比“至少”更容易漏边界。读题时先不要猜专题，避免被方法名带偏。",
+      code: "record ProblemContract(String input, String output, List<String> constraints) {}\n\nProblemContract parse() {\n    return new ProblemContract(\n        \"参数和数据范围\",\n        \"返回值或修改目标\",\n        List.of(\"连续\", \"去重\", \"原地\", \"边界\")\n    );\n}",
+      complexity: "读题阶段不评估复杂度，先确认目标和限制。",
+      related: "题面拆解，示例手推"
+    },
+    {
+      id: "familiar-two-pointer-invariant",
+      title: "熟悉 03 指针不变量",
+      topic: "双指针",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "不变量", "边界"],
+      front: "当题目需要在数组或字符串中维护两个位置时，如何判断每个指针移动后仍然没有漏掉答案？",
+      hint: "给每个指针一句固定职责。",
+      shortAnswer: "先定义指针含义：它们分别代表待处理边界、有效区间边界或候选答案边界。每次移动必须能解释“被丢弃的部分为什么不可能更优或不再需要”。",
+      details: "双指针常见错误是只记住移动规则，却说不清丢弃理由。复习时重点问自己：区间是开还是闭？什么时候更新答案？移动左边还是右边的依据是什么？是否需要排序？是否需要跳过重复值？",
+      code: "int left = 0, right = nums.length - 1;\nwhile (left < right) {\n    updateAnswer(left, right);\n    if (shouldMoveLeft(nums, left, right)) {\n        left++;\n    } else {\n        right--;\n    }\n}",
+      complexity: "常见时间 O(n) 或 O(n log n + n)，空间 O(1) 到 O(n)。",
+      related: "LC 11，LC 15，LC 42"
+    },
+    {
+      id: "familiar-window-contract",
+      title: "熟悉 04 窗口收缩条件",
+      topic: "滑动窗口",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "窗口", "计数"],
+      front: "面对连续子串或子数组问题，如何设计窗口的扩大、收缩和答案更新时机？",
+      hint: "先写出窗口什么时候合法。",
+      shortAnswer: "右边界负责纳入新元素，窗口状态记录当前内容。只要窗口不满足条件就移动左边界并同步撤销状态。答案更新时机取决于题目问最长、最短还是计数。",
+      details: "最长问题通常在窗口合法时更新答案；最短问题通常在窗口满足条件后尽量收缩并更新答案；计数问题要特别小心一次右移能贡献多少答案。窗口题的关键不是模板，而是合法条件和贡献计算。",
+      code: "Map<Character, Integer> count = new HashMap<>();\nint left = 0, ans = 0;\nfor (int right = 0; right < s.length(); right++) {\n    add(count, s.charAt(right));\n    while (!valid(count)) {\n        remove(count, s.charAt(left++));\n    }\n    ans = Math.max(ans, right - left + 1);\n}",
+      complexity: "常见时间 O(n)，空间 O(字符集大小) 或 O(n)。",
+      related: "LC 3，LC 76，LC 438"
+    },
+    {
+      id: "familiar-binary-boundary",
+      title: "熟悉 05 二分边界自检",
+      topic: "二分",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "边界", "单调性"],
+      front: "写二分时，如何避免循环条件、mid 更新和返回值互相打架？",
+      hint: "先固定区间含义，再写排除逻辑。",
+      shortAnswer: "明确使用闭区间还是左闭右开。闭区间常用 left <= right，排除 mid 时更新为 mid - 1 或 mid + 1；答案二分常用 left < right，保留 mid 时更新为 right = mid。",
+      details: "二分错误大多来自区间语义混乱。复习时要说清楚：left/right 是否都可能是答案？循环结束时 left 的含义是什么？check(mid) 为 true 时是保留 mid 还是丢弃 mid？",
+      code: "int left = low, right = high;\nwhile (left < right) {\n    int mid = left + (right - left) / 2;\n    if (check(mid)) right = mid;\n    else left = mid + 1;\n}\nreturn left;",
+      complexity: "时间 O(log 范围 * check 成本)，空间通常 O(1)。",
+      related: "LC 35，LC 704，LC 875，LC 1011"
+    },
+    {
+      id: "familiar-backtracking-frame",
+      title: "熟悉 06 回溯三件套",
+      topic: "回溯",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "递归", "剪枝"],
+      front: "写枚举类题目时，如何快速确定路径、选择列表和结束条件？",
+      hint: "每层递归只负责一个选择位置。",
+      shortAnswer: "路径保存已经选择的内容，选择列表由 start、used 或当前位置决定，结束条件决定何时收集答案。进入递归前做选择，递归返回后撤销选择。",
+      details: "组合题关注 start，排列题关注 used，棋盘题关注坐标和合法性。剪枝要建立在排序、剩余目标或合法性判断上。复习时尤其检查：是否复制 path？是否漏了撤销？去重是在树层还是树枝？",
+      code: "void dfs(int start) {\n    if (shouldCollect()) {\n        ans.add(new ArrayList<>(path));\n        return;\n    }\n    for (int i = start; i < choices.length; i++) {\n        if (shouldSkip(i)) continue;\n        path.add(choices[i]);\n        dfs(nextStart(i));\n        path.remove(path.size() - 1);\n    }\n}",
+      complexity: "通常是指数级；空间取决于递归深度和答案规模。",
+      related: "LC 39，LC 46，LC 78，LC 79"
+    },
+    {
+      id: "familiar-dp-state",
+      title: "熟悉 07 DP 状态定义",
+      topic: "动态规划",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "状态", "转移"],
+      front: "遇到最值、计数或可行性问题时，如何把题目转成可复用的状态转移？",
+      hint: "先问 dp[i] 或 dp[i][j] 代表什么确定含义。",
+      shortAnswer: "定义状态，确定初始值，找最后一步如何由更小子问题转移，决定遍历顺序，最后确认返回哪个状态。状态定义要能直接表达题目目标。",
+      details: "DP 不是先套数组，而是先定义含义。比如 dp[i] 表示前 i 个、以 i 结尾、金额 i、容量 j，含义不同会导致遍历顺序和初始化完全不同。复习时优先检查初始化和遍历方向。",
+      code: "int[] dp = new int[target + 1];\ninit(dp);\nfor (int i = 0; i < n; i++) {\n    for (int j = target; j >= cost[i]; j--) {\n        dp[j] = Math.max(dp[j], dp[j - cost[i]] + value[i]);\n    }\n}",
+      complexity: "一维常见 O(n * target)，二维常见 O(n * m)。",
+      related: "LC 70，LC 198，LC 322，LC 416"
+    },
+    {
+      id: "familiar-stack-monotonic",
+      title: "熟悉 08 单调结构",
+      topic: "栈",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "单调栈", "队列"],
+      front: "当题目询问下一个更大值、窗口最大值或最近边界时，如何用结构维护候选元素？",
+      hint: "被新元素淘汰的旧元素，以后也不会更优。",
+      shortAnswer: "维护一个有序的候选集合。新元素进入时，把已经不可能成为答案的元素弹出；需要答案时，结构顶部或队首就是当前最优候选。",
+      details: "单调栈常解决最近更大/更小边界，单调队列常解决滑动窗口最值。复习时要说清：栈里存值还是下标？单调递增还是递减？元素何时出窗口？等于时是否弹出？",
+      code: "Deque<Integer> stack = new ArrayDeque<>();\nfor (int i = 0; i < nums.length; i++) {\n    while (!stack.isEmpty() && nums[stack.peek()] < nums[i]) {\n        int index = stack.pop();\n        ans[index] = nums[i];\n    }\n    stack.push(i);\n}",
+      complexity: "每个元素进出结构一次，时间 O(n)，空间 O(n)。",
+      related: "LC 739，LC 84，LC 239"
+    },
+    {
+      id: "familiar-graph-visited",
+      title: "熟悉 09 搜索访问标记",
+      topic: "图论",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "DFS", "BFS"],
+      front: "网格、树或图搜索时，如何避免重复访问、漏访问和层数计算错误？",
+      hint: "先确定节点是什么，再确定何时标记 visited。",
+      shortAnswer: "把状态抽象成节点，边表示可达关系。入队或递归前就标记访问，避免重复加入。BFS 适合最短层数，DFS 适合连通块和路径枚举。",
+      details: "搜索题要先说清邻居生成方式：四方向、八方向、前置课程、树的左右孩子等。BFS 计算分钟数或步数时，通常按层处理队列大小；DFS 注意递归出口和越界条件。",
+      code: "Queue<int[]> queue = new ArrayDeque<>();\nqueue.offer(new int[] {startR, startC});\nvisited[startR][startC] = true;\nwhile (!queue.isEmpty()) {\n    int size = queue.size();\n    for (int k = 0; k < size; k++) {\n        int[] cur = queue.poll();\n        for (int[] next : neighbors(cur)) visit(next);\n    }\n}",
+      complexity: "时间 O(V + E) 或 O(mn)，空间 O(V) 或 O(mn)。",
+      related: "LC 200，LC 207，LC 994"
+    },
+    {
+      id: "familiar-java-edge",
+      title: "熟悉 10 Java 易错细节",
+      topic: "技巧",
+      difficulty: "熟悉",
+      source: "卡面熟悉",
+      tags: ["卡面熟悉", "Java", "易错点"],
+      front: "用 Java 写算法题时，哪些语言细节最容易让思路正确但代码出错？",
+      hint: "关注比较、溢出、集合默认值和可变对象。",
+      shortAnswer: "字符串比较用 equals，整型中间值注意溢出，HashMap 取计数用 getOrDefault，优先队列比较器避免相减溢出，加入答案时复制可变 path。",
+      details: "Java 面试代码常见坑：Arrays.asList 返回固定大小列表；PriorityQueue 比较器不要写 a - b；递归 path 加入答案要 new ArrayList<>(path)；char 和 int 转换要明确；二维数组排序要写 Comparator。",
+      code: "Map<Integer, Integer> count = new HashMap<>();\ncount.put(x, count.getOrDefault(x, 0) + 1);\n\nPriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> Integer.compare(a[0], b[0]));\nans.add(new ArrayList<>(path));",
+      complexity: "语言细节本身不改变复杂度，但会影响正确性和鲁棒性。",
+      related: "Java 集合，比较器，溢出，可变对象"
+    }
+  ];
+
   const state = {
     cards: [],
     overrides: {},
@@ -252,6 +405,7 @@
     dailyMode: false,
     activeId: null,
     editingId: null,
+    selectedCollection: "全部集合",
     selectedTopic: "全部",
     query: "",
     weakOnly: false,
@@ -265,6 +419,7 @@
 
   const els = {
     searchInput: document.getElementById("searchInput"),
+    collectionFilters: document.getElementById("collectionFilters"),
     topicFilters: document.getElementById("topicFilters"),
     weakOnlyToggle: document.getElementById("weakOnlyToggle"),
     customOnlyToggle: document.getElementById("customOnlyToggle"),
@@ -360,10 +515,13 @@
       .filter((card) => !hot100Numbers.has(getLcNumber(card.title + " " + card.related)))
       .filter((card) => !deleted.has(card.id))
       .map((card) => normalizeCard({ ...card, ...(state.overrides[card.id] || {}) }));
+    const familiarCards = FAMILIAR_CARDS
+      .filter((card) => !deleted.has(card.id))
+      .map((card) => normalizeCard({ ...card, ...(state.overrides[card.id] || {}) }));
     const seededHot100 = hot100Cards
       .filter((card) => !deleted.has(card.id))
       .map((card) => normalizeCard({ ...card, ...(state.overrides[card.id] || {}) }));
-    state.cards = [...seededHot100, ...defaultCards, ...customCards.map(normalizeCard).filter((card) => !deleted.has(card.id))];
+    state.cards = [...seededHot100, ...familiarCards, ...defaultCards, ...customCards.map(normalizeCard).filter((card) => !deleted.has(card.id))];
     state.activeId = state.cards[0] ? state.cards[0].id : null;
     els.modelSelect.value = state.aiConfig.model || "deepseek-v4-pro";
     render();
@@ -465,6 +623,23 @@
     return ["全部", ...Array.from(new Set([...TOPICS, ...state.cards.map((card) => card.topic)]))];
   }
 
+  function getCollectionName(card) {
+    const source = card.source || "";
+    if (card.custom) return "我的卡片";
+    if (source.includes("卡面熟悉")) return "卡面熟悉";
+    if (source.includes("Hot100")) return "Hot100";
+    if (source.includes("代码随想录")) return "代码随想录";
+    return source || "其他";
+  }
+
+  function getCollections() {
+    const preferred = ["Hot100", "卡面熟悉", "代码随想录", "我的卡片"];
+    const names = new Set(state.cards.map(getCollectionName));
+    const ordered = preferred.filter((name) => names.has(name));
+    const rest = Array.from(names).filter((name) => !preferred.includes(name)).sort();
+    return ["全部集合", ...ordered, ...rest];
+  }
+
   function getFilteredCards() {
     const query = state.query.trim().toLowerCase();
     const dailyIds = new Set(state.dailyMode ? state.daily.deckIds : []);
@@ -478,9 +653,11 @@
         card.shortAnswer,
         card.details,
         card.related,
+        getCollectionName(card),
         ...(card.tags || [])
       ].join(" ").toLowerCase();
       return (!state.dailyMode || dailyIds.has(card.id))
+        && (state.selectedCollection === "全部集合" || getCollectionName(card) === state.selectedCollection)
         && (state.selectedTopic === "全部" || card.topic === state.selectedTopic)
         && (!query || haystack.includes(query))
         && (!state.weakOnly || progress.status === "again" || progress.status === "hard")
@@ -504,11 +681,31 @@
   }
 
   function render() {
+    renderCollectionFilters();
     renderTopicFilters();
     renderStats();
     renderDailyStatus();
     renderCardList();
     renderActiveCard();
+  }
+
+  function renderCollectionFilters() {
+    els.collectionFilters.innerHTML = "";
+    getCollections().forEach((collection) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tag-button collection-button" + (collection === state.selectedCollection ? " active" : "");
+      button.textContent = collection;
+      button.addEventListener("click", () => {
+        state.selectedCollection = collection;
+        state.dailyMode = false;
+        state.customOnly = collection === "我的卡片";
+        els.customOnlyToggle.checked = state.customOnly;
+        chooseFirstFiltered();
+        render();
+      });
+      els.collectionFilters.appendChild(button);
+    });
   }
 
   function renderTopicFilters() {
@@ -895,6 +1092,7 @@
     });
     state.cards.push(card);
     state.activeId = card.id;
+    state.selectedCollection = "全部集合";
     state.selectedTopic = "全部";
     state.flipped = false;
     state.hintVisible = false;
@@ -1566,6 +1764,11 @@
 
   els.customOnlyToggle.addEventListener("change", (event) => {
     state.customOnly = event.target.checked;
+    if (state.customOnly) {
+      state.selectedCollection = "我的卡片";
+    } else if (state.selectedCollection === "我的卡片") {
+      state.selectedCollection = "全部集合";
+    }
     chooseFirstFiltered();
     render();
   });
@@ -1573,6 +1776,12 @@
   els.dailyDeckButton.addEventListener("click", () => {
     ensureDailyDeck();
     state.dailyMode = true;
+    state.selectedCollection = "全部集合";
+    state.selectedTopic = "全部";
+    state.weakOnly = false;
+    state.customOnly = false;
+    els.weakOnlyToggle.checked = false;
+    els.customOnlyToggle.checked = false;
     chooseFirstFiltered();
     render();
   });
@@ -1581,12 +1790,24 @@
     if (!confirm("确定重抽今天的 10 张吗？当前今日牌组会放回卡池。")) return;
     redrawDailyDeck();
     state.dailyMode = true;
+    state.selectedCollection = "全部集合";
+    state.selectedTopic = "全部";
+    state.weakOnly = false;
+    state.customOnly = false;
+    els.weakOnlyToggle.checked = false;
+    els.customOnlyToggle.checked = false;
     chooseFirstFiltered();
     render();
   });
 
   els.allCardsButton.addEventListener("click", () => {
     state.dailyMode = false;
+    state.selectedCollection = "全部集合";
+    state.selectedTopic = "全部";
+    state.weakOnly = false;
+    state.customOnly = false;
+    els.weakOnlyToggle.checked = false;
+    els.customOnlyToggle.checked = false;
     chooseFirstFiltered();
     render();
   });
