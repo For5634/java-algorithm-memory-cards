@@ -439,6 +439,7 @@
     redrawDailyButton: document.getElementById("redrawDailyButton"),
     allCardsButton: document.getElementById("allCardsButton"),
     dailyStatus: document.getElementById("dailyStatus"),
+    studyArea: document.getElementById("studyArea"),
     flashcard: document.getElementById("flashcard"),
     cardTopic: document.getElementById("cardTopic"),
     cardDifficulty: document.getElementById("cardDifficulty"),
@@ -1099,6 +1100,11 @@
     els.customOnlyToggle.checked = false;
   }
 
+  function scrollStudyIntoViewOnMobile() {
+    if (!window.matchMedia("(max-width: 820px)").matches) return;
+    els.studyArea.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function advanceToNextCard(previousOrder = getFilteredCards()) {
     const filtered = getFilteredCards();
     if (!filtered.length) {
@@ -1154,6 +1160,7 @@
     saveProgress();
     advanceToNextCard(previousOrder);
     render();
+    scrollStudyIntoViewOnMobile();
   }
 
   function undoLastRating() {
@@ -1172,6 +1179,7 @@
     state.hintVisible = false;
     saveProgress();
     render();
+    scrollStudyIntoViewOnMobile();
   }
 
   function addCard(formData) {
@@ -1927,6 +1935,7 @@
     state.flipped = false;
     state.hintVisible = false;
     render();
+    scrollStudyIntoViewOnMobile();
   });
 
   els.toggleListButton.addEventListener("click", () => {
