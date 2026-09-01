@@ -147,6 +147,12 @@ button:focus-visible,
   margin-top: 18px;
 }
 
+.reset-filter-button {
+  width: 100%;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
 .tag-grid,
 .chips {
   display: flex;

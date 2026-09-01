@@ -434,6 +434,7 @@
     statusChart: document.getElementById("statusChart"),
     statusBars: document.getElementById("statusBars"),
     topicStats: document.getElementById("topicStats"),
+    resetFiltersButton: document.getElementById("resetFiltersButton"),
     dailyDeckButton: document.getElementById("dailyDeckButton"),
     redrawDailyButton: document.getElementById("redrawDailyButton"),
     allCardsButton: document.getElementById("allCardsButton"),
@@ -1084,6 +1085,18 @@
     state.activeId = filtered[0] ? filtered[0].id : null;
     state.flipped = false;
     state.hintVisible = false;
+  }
+
+  function resetFilters({ keepDaily = false } = {}) {
+    state.dailyMode = keepDaily ? state.dailyMode : false;
+    state.selectedCollection = "全部集合";
+    state.selectedTopic = "全部";
+    state.query = "";
+    state.weakOnly = false;
+    state.customOnly = false;
+    els.searchInput.value = "";
+    els.weakOnlyToggle.checked = false;
+    els.customOnlyToggle.checked = false;
   }
 
   function advanceToNextCard(previousOrder = getFilteredCards()) {
@@ -1858,12 +1871,8 @@
   els.dailyDeckButton.addEventListener("click", () => {
     ensureDailyDeck();
     state.dailyMode = true;
-    state.selectedCollection = "全部集合";
-    state.selectedTopic = "全部";
-    state.weakOnly = false;
-    state.customOnly = false;
-    els.weakOnlyToggle.checked = false;
-    els.customOnlyToggle.checked = false;
+    resetFilters({ keepDaily: true });
+    state.dailyMode = true;
     chooseFirstFiltered();
     render();
   });
@@ -1872,24 +1881,20 @@
     if (!confirm("确定重抽今天的 10 张吗？当前今日牌组会放回卡池。")) return;
     redrawDailyDeck();
     state.dailyMode = true;
-    state.selectedCollection = "全部集合";
-    state.selectedTopic = "全部";
-    state.weakOnly = false;
-    state.customOnly = false;
-    els.weakOnlyToggle.checked = false;
-    els.customOnlyToggle.checked = false;
+    resetFilters({ keepDaily: true });
+    state.dailyMode = true;
     chooseFirstFiltered();
     render();
   });
 
   els.allCardsButton.addEventListener("click", () => {
-    state.dailyMode = false;
-    state.selectedCollection = "全部集合";
-    state.selectedTopic = "全部";
-    state.weakOnly = false;
-    state.customOnly = false;
-    els.weakOnlyToggle.checked = false;
-    els.customOnlyToggle.checked = false;
+    resetFilters();
+    chooseFirstFiltered();
+    render();
+  });
+
+  els.resetFiltersButton.addEventListener("click", () => {
+    resetFilters();
     chooseFirstFiltered();
     render();
   });
