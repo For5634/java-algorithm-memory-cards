@@ -637,8 +637,9 @@
   }
 
   function getCollections() {
-    const preferred = ["Hot100", "卡面熟悉", "代码随想录", "我的卡片"];
+    const preferred = ["Hot100", "薄弱卡", "卡面熟悉", "代码随想录", "我的卡片"];
     const names = new Set(state.cards.map(getCollectionName));
+    names.add("薄弱卡");
     const ordered = preferred.filter((name) => names.has(name));
     const rest = Array.from(names).filter((name) => !preferred.includes(name)).sort();
     return ["全部集合", ...ordered, ...rest];
@@ -648,9 +649,16 @@
     return state.cards.reduce((counts, card) => {
       const name = getCollectionName(card);
       counts[name] = (counts[name] || 0) + 1;
+      if (isWeakProgress(state.progress[card.id])) {
+        counts["薄弱卡"] = (counts["薄弱卡"] || 0) + 1;
+      }
       counts["全部集合"] = (counts["全部集合"] || 0) + 1;
       return counts;
     }, {});
+  }
+
+  function isWeakProgress(progress) {
+    return progress?.status !== "mastered";
   }
 
   function getFilteredCards() {
@@ -670,10 +678,11 @@
         ...(card.tags || [])
       ].join(" ").toLowerCase();
       return (!state.dailyMode || dailyIds.has(card.id))
-        && (state.selectedCollection === "全部集合" || getCollectionName(card) === state.selectedCollection)
+        && (state.selectedCollection === "全部集合"
+          || (state.selectedCollection === "薄弱卡" ? isWeakProgress(progress) : getCollectionName(card) === state.selectedCollection))
         && (state.selectedTopic === "全部" || card.topic === state.selectedTopic)
         && (!query || haystack.includes(query))
-        && (!state.weakOnly || progress.status === "again" || progress.status === "hard")
+        && (!state.weakOnly || isWeakProgress(progress))
         && (!state.customOnly || card.custom);
     });
     return sortForReview(filtered);
@@ -745,7 +754,7 @@
     const progressValues = filtered.map((card) => state.progress[card.id] || {});
     const stats = buildProgressStats(filtered);
     els.totalCount.textContent = filtered.length;
-    els.weakCount.textContent = progressValues.filter((item) => item.status === "again" || item.status === "hard").length;
+    els.weakCount.textContent = progressValues.filter(isWeakProgress).length;
     els.knownCount.textContent = progressValues.filter((item) => item.status === "mastered").length;
     renderProgressDashboard(stats);
   }
@@ -770,7 +779,7 @@
       }
       const item = topicMap.get(card.topic);
       item.total += 1;
-      if (status === "again" || status === "hard") item.weak += 1;
+      if (isWeakProgress(state.progress[card.id])) item.weak += 1;
       if (status === "hard") item.hard += 1;
       if (status === "mastered") item.mastered += 1;
     });
@@ -778,7 +787,7 @@
     const total = cards.length;
     const mastered = byKey.get("mastered").count;
     const hard = byKey.get("hard").count;
-    const weak = byKey.get("again").count + hard;
+    const weak = total - mastered;
     const topics = Array.from(topicMap.values())
       .sort((a, b) => b.weak - a.weak || b.hard - a.hard || b.total - a.total)
       .slice(0, 6);
@@ -809,7 +818,7 @@
       <div class="stat-callouts">
         <div><strong>${stats.mastered}</strong><span>已掌握</span></div>
         <div><strong>${stats.hard}</strong><span>模糊</span></div>
-        <div><strong>${stats.weak}</strong><span>薄弱合计</span></div>
+        <div><strong>${stats.weak}</strong><span>未掌握合计</span></div>
       </div>
     `;
 
@@ -827,7 +836,7 @@
     }).join("");
 
     els.topicStats.innerHTML = `
-      <div class="section-title">薄弱专题 Top ${stats.topics.length || 0}</div>
+      <div class="section-title">未掌握专题 Top ${stats.topics.length || 0}</div>
       ${stats.topics.length ? stats.topics.map((topic) => `
         <div class="topic-stat-row">
           <span>${escapeHtml(topic.topic)}</span>
@@ -838,15 +847,21 @@
   }
 
   function renderDailyStatus() {
-    const total = state.cards.length;
-    const used = state.daily.usedIds.filter((id) => state.cards.some((card) => card.id === id)).length;
-    const deckIds = state.daily.deckIds.filter((id) => state.cards.some((card) => card.id === id));
+    const hot100Cards = getDailySourceCards();
+    const hot100Ids = new Set(hot100Cards.map((card) => card.id));
+    const total = hot100Cards.length;
+    const used = state.daily.usedIds.filter((id) => hot100Ids.has(id)).length;
+    const deckIds = state.daily.deckIds.filter((id) => hot100Ids.has(id));
     const todayCount = deckIds.length;
     const reviewedToday = deckIds.filter((id) => isReviewedToday(state.progress[id])).length;
     els.dailyDeckButton.classList.toggle("active-mode", state.dailyMode);
     els.dailyStatus.textContent = state.dailyMode
-      ? `今日 ${todayCount} 张，已复习 ${reviewedToday}/${todayCount}；本轮已抽 ${used}/${total} 张。`
-      : `每天抽 10 张，不重复抽完整个卡池。已抽 ${used}/${total} 张。`;
+      ? `今日 Hot100 ${todayCount} 张，已复习 ${reviewedToday}/${todayCount}；本轮已抽 ${used}/${total} 张。`
+      : `每天从 Hot100 抽 10 张，不重复抽完整个 Hot100。已抽 ${used}/${total} 张。`;
+  }
+
+  function getDailySourceCards() {
+    return state.cards.filter((card) => getCollectionName(card) === "Hot100");
   }
 
   function todayKey() {
@@ -872,7 +887,8 @@
 
   function ensureDailyDeck() {
     const today = todayKey();
-    const validIds = new Set(state.cards.map((card) => card.id));
+    const sourceCards = getDailySourceCards();
+    const validIds = new Set(sourceCards.map((card) => card.id));
     state.daily.usedIds = (state.daily.usedIds || []).filter((id) => validIds.has(id));
     state.daily.deckIds = (state.daily.deckIds || []).filter((id) => validIds.has(id));
 
@@ -882,10 +898,10 @@
     }
 
     const used = new Set(state.daily.usedIds);
-    let remaining = state.cards.filter((card) => !used.has(card.id));
+    let remaining = sourceCards.filter((card) => !used.has(card.id));
     if (!remaining.length) {
       state.daily.usedIds = [];
-      remaining = [...state.cards];
+      remaining = [...sourceCards];
     }
 
     const shuffled = shuffleCards(remaining);
@@ -1024,6 +1040,7 @@
     els.mobileReviewActions.hidden = !hasCard || !state.flipped;
     els.mobileFlipButton.textContent = state.flipped ? "回到题面" : "看答案";
     renderUndoActions();
+    updateMobileDockVisibility();
   }
 
   function renderUndoActions() {
@@ -1033,6 +1050,18 @@
       button.classList.toggle("hidden", !canUndo);
       button.disabled = !canUndo;
     });
+  }
+
+  function updateMobileDockVisibility() {
+    const dock = document.querySelector(".mobile-action-dock");
+    if (!dock || !els.flashcard) return;
+    if (!window.matchMedia("(max-width: 820px)").matches || !state.activeId) {
+      dock.classList.remove("dock-hidden");
+      return;
+    }
+    const cardRect = els.flashcard.getBoundingClientRect();
+    const stillInStudy = cardRect.bottom > 90 && cardRect.top < window.innerHeight - 80;
+    dock.classList.toggle("dock-hidden", !stillInStudy);
   }
 
   function flipActiveCard() {
@@ -1876,6 +1905,9 @@
       flipActiveCard();
     }
   });
+
+  window.addEventListener("scroll", updateMobileDockVisibility, { passive: true });
+  window.addEventListener("resize", updateMobileDockVisibility);
 
   els.hintButton.addEventListener("click", () => {
     state.hintVisible = !state.hintVisible;
