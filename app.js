@@ -415,6 +415,7 @@
     flipped: false,
     hintVisible: false,
     lastRating: null,
+    previewRatingId: null,
     aiConfig: { model: "deepseek-v4-pro" }
   };
 
@@ -443,6 +444,7 @@
     flashcard: document.getElementById("flashcard"),
     cardTopic: document.getElementById("cardTopic"),
     cardDifficulty: document.getElementById("cardDifficulty"),
+    cardStatus: document.getElementById("cardStatus"),
     cardSource: document.getElementById("cardSource"),
     cardSourceFront: document.getElementById("cardSourceFront"),
     officialLinkFront: document.getElementById("officialLinkFront"),
@@ -961,6 +963,7 @@
         state.activeId = card.id;
         state.flipped = false;
         state.hintVisible = false;
+        state.previewRatingId = null;
         renderActiveCard();
         renderCardList();
       });
@@ -989,6 +992,7 @@
     ].filter(Boolean).join(" · ");
     els.cardTopic.textContent = card.topic;
     els.cardDifficulty.textContent = card.difficulty || "未分级";
+    els.cardStatus.textContent = statusText(progress.status);
     els.cardSource.textContent = card.source || "自定义";
     renderOfficialLinks(card);
     els.cardTitle.textContent = card.title;
@@ -1025,6 +1029,7 @@
     els.hintButton.textContent = "显示提示";
     els.cardTopic.textContent = "专题";
     els.cardDifficulty.textContent = "难度";
+    els.cardStatus.textContent = "熟练度";
     els.cardSource.textContent = "来源";
     renderOfficialLinks(null);
     els.cardShortAnswer.textContent = "暂无内容。";
@@ -1077,7 +1082,7 @@
       again: "薄弱",
       hard: "模糊",
       good: "记住",
-      mastered: "掌握"
+      mastered: "已掌握"
     }[status] || "新卡";
   }
 
@@ -1086,6 +1091,7 @@
     state.activeId = filtered[0] ? filtered[0].id : null;
     state.flipped = false;
     state.hintVisible = false;
+    state.previewRatingId = null;
   }
 
   function resetFilters({ keepDaily = false } = {}) {
@@ -1111,6 +1117,7 @@
       state.activeId = null;
       state.flipped = false;
       state.hintVisible = false;
+      state.previewRatingId = null;
       return;
     }
     const currentId = state.activeId;
@@ -1135,29 +1142,38 @@
     state.activeId = next.id;
     state.flipped = false;
     state.hintVisible = false;
+    state.previewRatingId = null;
   }
 
   function mark(status) {
     if (!state.activeId) return;
     const previousOrder = getFilteredCards();
+    const currentId = state.activeId;
+    const current = state.progress[currentId] || { reviews: 0 };
+    const wasPreviewRated = state.flipped && state.previewRatingId === currentId;
+
+    if (!wasPreviewRated) {
+      state.lastRating = {
+        cardId: currentId,
+        previousProgress: state.progress[currentId] ? { ...state.progress[currentId] } : null
+      };
+    }
+
+    state.progress[currentId] = {
+      status,
+      reviews: (current.reviews || 0) + (wasPreviewRated ? 0 : 1),
+      updatedAt: new Date().toISOString()
+    };
+    saveProgress();
+
     if (!state.flipped && (status === "again" || status === "hard")) {
+      state.previewRatingId = currentId;
       state.flipped = true;
       state.hintVisible = false;
       render();
       return;
     }
-    const currentId = state.activeId;
-    const current = state.progress[currentId] || { reviews: 0 };
-    state.lastRating = {
-      cardId: currentId,
-      previousProgress: state.progress[currentId] ? { ...state.progress[currentId] } : null
-    };
-    state.progress[currentId] = {
-      status,
-      reviews: (current.reviews || 0) + 1,
-      updatedAt: new Date().toISOString()
-    };
-    saveProgress();
+    state.previewRatingId = null;
     advanceToNextCard(previousOrder);
     render();
     scrollStudyIntoViewOnMobile();
@@ -1172,6 +1188,7 @@
       delete state.progress[cardId];
     }
     state.lastRating = null;
+    state.previewRatingId = null;
     if (state.cards.some((card) => card.id === cardId)) {
       state.activeId = cardId;
     }
@@ -1934,6 +1951,7 @@
     state.activeId = next.id;
     state.flipped = false;
     state.hintVisible = false;
+    state.previewRatingId = null;
     render();
     scrollStudyIntoViewOnMobile();
   });

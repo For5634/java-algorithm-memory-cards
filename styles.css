@@ -12,6 +12,407 @@
   --radius: 8px;
 }
 
+/* 八股卡片：用更少的表单字段，换取更快的知识沉淀。 */
+.simple-card-page {
+  background: #f3f0e9;
+}
+
+.simple-card-shell {
+  width: min(1500px, calc(100% - 40px));
+}
+
+.simple-topbar {
+  border-bottom-color: #c9c2b6;
+}
+
+.simple-workspace {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 340px;
+  gap: 20px;
+  padding-top: 24px;
+}
+
+.simple-filter-panel,
+.simple-editor {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+.simple-count {
+  margin: 22px 0 9px;
+  color: var(--muted);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 12px;
+}
+
+.simple-card-list {
+  display: grid;
+  gap: 7px;
+}
+
+.simple-list-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  width: 100%;
+  border: 1px solid #d9d3c7;
+  border-radius: 7px;
+  background: #fffdf9;
+  color: var(--ink);
+  padding: 10px;
+  text-align: left;
+}
+
+.simple-list-card:hover,
+.simple-list-card.active {
+  border-color: var(--blue);
+  background: #edf4f4;
+}
+
+.simple-list-card span,
+.simple-list-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.simple-list-card strong {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.simple-list-card small {
+  justify-self: end;
+}
+
+.simple-study-zone {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.simple-flashcard {
+  min-height: 500px;
+  border-color: #b9b1a4;
+  border-radius: 12px;
+  box-shadow: 0 18px 45px rgba(63, 56, 45, 0.12);
+}
+
+.simple-card-face {
+  padding: clamp(28px, 5vw, 62px);
+}
+
+.simple-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.simple-card-meta span {
+  border: 1px solid #cfc6b6;
+  border-radius: 999px;
+  background: #faf7f0;
+  color: #5d584e;
+  padding: 5px 10px;
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 12px;
+}
+
+.simple-card-meta span:last-child {
+  border-color: #a7c5b1;
+  background: #e9f2eb;
+  color: #336847;
+}
+
+.simple-side-label {
+  margin: 56px 0 13px;
+  color: var(--red);
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.simple-card-face h2 {
+  max-width: 900px;
+  font-family: "Microsoft YaHei UI", "Noto Serif SC", serif;
+  font-size: clamp(27px, 3.2vw, 48px);
+  font-weight: 600;
+  line-height: 1.42;
+}
+
+.simple-answer {
+  max-width: 900px;
+  color: #31352f;
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.9;
+}
+
+.simple-flip-tip,
+.simple-review-note,
+.simple-editor-head p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.simple-flip-tip {
+  position: absolute;
+  right: clamp(28px, 5vw, 62px);
+  bottom: 30px;
+}
+
+.simple-review-actions {
+  justify-content: center;
+}
+
+.simple-review-actions button {
+  min-width: 130px;
+}
+
+.simple-review-actions button:nth-child(3) {
+  background: #e8f3eb;
+}
+
+.simple-review-note {
+  margin: -5px 0 0;
+  text-align: center;
+}
+
+.simple-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.simple-editor-head p {
+  margin: 6px 0 0;
+}
+
+.simple-form {
+  margin-top: 16px;
+}
+
+.simple-form textarea {
+  line-height: 1.65;
+}
+
+.simple-field-tip {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.simple-editor-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.simple-ai-panel,
+.simple-data-panel {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.simple-ai-panel summary,
+.simple-data-panel summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.simple-ai-panel p,
+.simple-data-panel p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.simple-ai-panel textarea {
+  min-height: 112px;
+  margin-bottom: 9px;
+  line-height: 1.55;
+}
+
+.simple-ai-preview {
+  margin-top: 12px;
+  border: 1px solid #bcd3c3;
+  border-radius: 7px;
+  background: #f4faf5;
+  padding: 10px;
+}
+
+.simple-ai-preview > p {
+  margin-top: 0;
+}
+
+.simple-ai-preview > div {
+  display: grid;
+  max-height: 200px;
+  gap: 6px;
+  overflow: auto;
+  margin-bottom: 10px;
+}
+
+.simple-ai-preview article {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px dashed #c7d8cc;
+  padding-bottom: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.simple-ai-preview article:last-child {
+  border-bottom: 0;
+}
+
+.simple-ai-preview article span {
+  flex: none;
+  color: #477654;
+  font-size: 11px;
+}
+
+.simple-data-panel .file-button {
+  margin-top: 8px;
+}
+
+.simple-card-face {
+  overflow-y: auto;
+}
+
+.simple-flashcard[data-proficiency="生疏"] {
+  border-color: #d3a6a0;
+}
+
+.simple-flashcard[data-proficiency="一般"] {
+  border-color: #d6c38c;
+}
+
+.simple-flashcard[data-proficiency="熟练"] {
+  border-color: #a7c5b1;
+}
+
+.simple-flashcard[data-reveal-stage="2"] {
+  cursor: default;
+}
+
+.simple-list-card[data-proficiency="生疏"] small {
+  color: var(--red);
+}
+
+.simple-list-card[data-proficiency="一般"] small {
+  color: var(--yellow);
+}
+
+.simple-list-card[data-proficiency="熟练"] small {
+  color: var(--green);
+}
+
+.simple-review-actions button:nth-child(1) {
+  border-color: rgba(184, 66, 66, 0.45);
+  color: var(--red);
+}
+
+.simple-review-actions button:nth-child(2) {
+  border-color: rgba(185, 129, 33, 0.5);
+  color: var(--yellow);
+}
+
+.simple-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  pointer-events: none;
+  border-radius: 999px;
+  background: #27352d;
+  color: #fff;
+  opacity: 0;
+  padding: 10px 15px;
+  transform: translateY(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.simple-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 1160px) {
+  .simple-workspace {
+    grid-template-columns: 230px minmax(0, 1fr);
+  }
+
+  .simple-editor {
+    position: static;
+    grid-column: 1 / -1;
+    max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .simple-card-shell {
+    width: min(100% - 22px, 1500px);
+  }
+
+  .simple-workspace {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .simple-filter-panel {
+    position: static;
+    max-height: none;
+  }
+
+  .simple-card-list {
+    max-height: 220px;
+    overflow: auto;
+  }
+
+  .simple-flashcard {
+    min-height: 420px;
+  }
+
+  .simple-card-face {
+    padding: 28px 24px;
+  }
+
+  .simple-side-label {
+    margin-top: 38px;
+  }
+
+  .simple-flip-tip {
+    right: 24px;
+  }
+
+  .simple-review-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .simple-review-actions button {
+    min-width: 0;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -449,7 +850,7 @@ button:focus-visible,
 }
 
 .card-meta {
-  grid-template-columns: repeat(4, minmax(0, max-content));
+  grid-template-columns: repeat(5, minmax(0, max-content));
 }
 
 .card-meta span {

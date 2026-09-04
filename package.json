@@ -5,7 +5,7 @@
   "private": false,
   "scripts": {
     "start": "node server.js",
-    "check": "node --check app.js && node --check hot100-cards.js && node --check hot100-solutions.js && node --check server.js && node --check check-leetcode-links.js && node check-leetcode-links.js",
+    "check": "node --check app.js && node --check interview.js && node --check hot100-cards.js && node --check hot100-solutions.js && node --check server.js && node --check check-leetcode-links.js && node check-leetcode-links.js",
     "check:links": "node check-leetcode-links.js"
   },
   "keywords": [

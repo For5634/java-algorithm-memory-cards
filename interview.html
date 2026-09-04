@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>八股记忆卡片</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="simple-card-page">
+    <div class="shell simple-card-shell">
+      <header class="topbar simple-topbar">
+        <div>
+          <p class="eyebrow">personal interview notebook</p>
+          <h1>八股记忆卡片</h1>
+        </div>
+        <div class="top-actions">
+          <a class="ghost-button" href="index.html">工具首页</a>
+          <a class="ghost-button" href="app.html">算法卡片</a>
+          <button class="primary-button" id="flipButton" type="button">查看答案</button>
+        </div>
+      </header>
+
+      <main class="simple-workspace">
+        <aside class="panel simple-filter-panel" aria-label="卡片筛选">
+          <label class="field-label" for="searchInput">搜索卡片</label>
+          <input id="searchInput" type="search" placeholder="题面、答案或分类">
+          <div class="filter-block">
+            <div class="section-title">卡片分类</div>
+            <div class="tag-grid" id="categoryFilters"></div>
+          </div>
+          <p class="simple-count" id="cardCount">0 张卡片</p>
+          <div class="simple-card-list" id="cardList" aria-label="卡片列表"></div>
+        </aside>
+
+        <section class="simple-study-zone" aria-label="复习卡片">
+          <article class="flashcard simple-flashcard" id="flashcard" tabindex="0" aria-live="polite">
+            <div class="card-side card-front simple-card-face">
+              <div class="simple-card-meta"><span id="cardCategory">未分类</span><span id="cardProficiency">生疏</span></div>
+              <p class="simple-side-label">题面</p>
+              <h2 id="cardQuestion">创建第一张卡片，开始记录你的八股知识。</h2>
+              <p class="simple-flip-tip" id="cardFlipTip">点击卡片：精简答案 → 详细答案</p>
+            </div>
+            <div class="card-side card-back simple-card-face">
+              <div class="simple-card-meta"><span id="cardCategoryBack">未分类</span><span id="cardProficiencyBack">生疏</span></div>
+              <p class="simple-side-label" id="cardAnswerLabel">精简答案</p>
+              <div class="simple-answer" id="cardAnswer">答案会显示在这里。</div>
+            </div>
+          </article>
+          <div class="review-actions simple-review-actions" aria-label="更新记忆熟练度">
+            <button id="weakButton" type="button">生疏</button>
+            <button id="normalButton" type="button">一般</button>
+            <button id="masteredButton" type="button">熟练</button>
+          </div>
+          <p class="simple-review-note">复习后点一下熟练度即可更新；快捷键：F 翻面，1/2/3 更新熟练度，←/→ 切换卡片。</p>
+        </section>
+
+        <aside class="panel simple-editor" aria-label="创建卡片">
+          <div class="simple-editor-head">
+            <div><div class="section-title">快速制卡</div><p>填写分类、熟练度、题面与两层答案，保存即可复习。</p></div>
+            <button class="ghost-button compact-button" id="newCardButton" type="button">新建</button>
+          </div>
+          <details class="simple-ai-panel">
+            <summary>DeepSeek 智能批量制卡</summary>
+            <p>粘贴八股笔记、文章片段或整理提纲，先生成预览，再确认导入。</p>
+            <textarea id="aiSourceInput" rows="6" placeholder="例如：粘贴 MySQL 事务、索引、MVCC 的学习笔记……"></textarea>
+            <button class="ghost-button full" id="generateBulkButton" type="button">生成卡片预览</button>
+            <p class="note" id="aiStatus">本地服务会读取你的 DeepSeek API Key；内容不会写入卡片，直到你确认导入。</p>
+            <div class="simple-ai-preview hidden" id="aiPreview">
+              <p id="aiPreviewCount"></p>
+              <div id="aiPreviewList"></div>
+              <button class="primary-button full" id="importAiCardsButton" type="button">确认导入</button>
+            </div>
+          </details>
+          <form id="cardForm" class="add-form simple-form">
+            <label>卡片分类<select name="category" id="categorySelect" required></select></label>
+            <label class="hidden" id="newCategoryField">新建分类<input name="newCategory" placeholder="例如：微服务"></label>
+            <label>记忆熟练度<select name="proficiency"><option>生疏</option><option>一般</option><option>熟练</option></select></label>
+            <label>题面<textarea name="question" required rows="5" placeholder="例如：MySQL 的 MVCC 是什么？它解决了什么问题？"></textarea></label>
+            <label>精简答案<textarea name="briefAnswer" required rows="3" placeholder="第一次翻面展示：用 1～3 句话说清核心结论。"></textarea></label>
+            <label>详细答案<textarea name="detailedAnswer" required rows="7" placeholder="第二次翻面展示：补充原理、流程、边界和面试表达。支持换行。"></textarea><span class="simple-field-tip">答案中用 **重点内容** 包裹的文字会加粗展示。</span></label>
+            <button class="primary-button full" id="saveButton" type="submit">保存卡片</button>
+            <button class="ghost-button full hidden" id="cancelEditButton" type="button">取消编辑</button>
+          </form>
+          <div class="simple-editor-actions"><button class="ghost-button" id="editButton" type="button">编辑当前卡片</button><button class="danger-button" id="deleteButton" type="button">删除当前卡片</button></div>
+          <details class="simple-data-panel">
+            <summary>数据备份</summary>
+            <p>卡片仅保存在当前浏览器。导出后可在另一台设备或浏览器导入。</p>
+            <button class="ghost-button full" id="exportButton" type="button">导出所有卡片</button>
+            <label class="file-button">导入备份<input id="importInput" type="file" accept="application/json"></label>
+          </details>
+        </aside>
+      </main>
+    </div>
+    <div class="simple-toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="interview.js"></script>
+  </body>
+</html>

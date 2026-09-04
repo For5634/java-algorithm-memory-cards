@@ -2,6 +2,8 @@
 
 一个本地优先的 Java 算法 Anki 式记忆卡片工具，适合系统复习 LeetCode Hot100、代码随想录和高频面试题。
 
+同时提供独立的 [八股记忆卡片](interview.html)：用于记录与复习 Agent、MySQL、计算机网络、Spring Boot 等后端面试知识。它与算法卡片使用完全独立的浏览器本地数据，只保留分类、记忆熟练度、题面、精简答案和详细答案，支持两层翻面复习、编辑、删除、分类筛选与备份。它还可通过本地 DeepSeek 服务将一段学习笔记批量整理成卡片预览，确认后再导入。
+
 ![项目展示图](assets/preview.svg)
 
 ## 项目简介
@@ -62,6 +64,12 @@ start-cards.bat
 
 ```text
 http://localhost:8787/app.html
+```
+
+八股卡片入口：
+
+```text
+http://localhost:8787/interview.html
 ```
 
 ### 方式二：命令行启动
