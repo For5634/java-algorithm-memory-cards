@@ -1778,3 +1778,153 @@ button:disabled {
     font-size: 18px;
   }
 }
+
+/* 八股卡片移动端：复习优先，制卡功能保留在桌面端。 */
+@media (max-width: 720px) {
+  body.simple-card-page {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .simple-card-page .simple-card-shell {
+    width: 100%;
+    padding: 8px 12px 20px;
+  }
+
+  .simple-card-page .simple-topbar {
+    padding: 4px 0 12px;
+  }
+
+  .simple-card-page .top-actions {
+    gap: 6px;
+  }
+
+  .simple-card-page #editButton,
+  .simple-card-page .simple-editor {
+    display: none;
+  }
+
+  .simple-card-page #flipButton {
+    display: inline-flex;
+    min-height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .simple-card-page .simple-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 0;
+  }
+
+  .simple-card-page .simple-study-zone {
+    order: 1;
+    gap: 10px;
+  }
+
+  .simple-card-page .simple-filter-panel {
+    order: 2;
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  .simple-card-page .simple-flashcard {
+    min-height: clamp(390px, 66svh, 610px);
+    border-radius: 20px;
+    box-shadow: 0 16px 34px rgba(63, 56, 45, 0.14);
+  }
+
+  .simple-card-page .simple-card-face {
+    padding: 22px 20px 30px;
+  }
+
+  .simple-card-page .simple-side-label {
+    margin-top: clamp(30px, 7vh, 58px);
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .simple-card-page .simple-card-face h2 {
+    margin: 0;
+    font-size: clamp(23px, 6.1vw, 31px);
+    line-height: 1.52;
+  }
+
+  .simple-card-page .simple-answer {
+    padding-bottom: 24px;
+    font-size: 17px;
+    line-height: 1.86;
+  }
+
+  .simple-card-page .simple-detail-trigger {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    margin-top: 18px;
+    font-size: 15px;
+  }
+
+  .simple-card-page .simple-flip-tip {
+    position: static;
+    margin: 30px 0 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .simple-card-page .simple-review-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .simple-card-page .simple-review-actions button {
+    min-height: 46px;
+    min-width: 0;
+    padding: 0 6px;
+    border-radius: 11px;
+    font-size: 14px;
+  }
+
+  .simple-card-page .simple-review-note {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .simple-card-page .simple-filter-panel .tag-grid {
+    flex-wrap: nowrap;
+    gap: 7px;
+    margin-right: -3px;
+    overflow-x: auto;
+    padding: 2px 3px 5px 0;
+    scrollbar-width: thin;
+  }
+
+  .simple-card-page .simple-filter-panel .tag-button {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .simple-card-page .simple-count {
+    margin: 14px 0 8px;
+  }
+
+  .simple-card-page .simple-card-list {
+    max-height: 280px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .simple-card-page .simple-list-card {
+    min-height: 58px;
+    padding: 10px 11px;
+  }
+
+  .simple-card-page .simple-list-card strong {
+    font-size: 14px;
+  }
+}
