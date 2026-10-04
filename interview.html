@@ -7,6 +7,11 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body class="simple-card-page">
+    <aside class="simple-local-warning hidden" id="localStorageNotice" aria-live="polite">
+      <strong>当前是直接打开的离线页面</strong>
+      <span>离线页面无法读取本机卡片库。请通过本地服务打开，已保存的卡片才会自动恢复。</span>
+      <a href="http://localhost:8787/interview.html">打开已保存的八股卡片</a>
+    </aside>
     <div class="shell simple-card-shell">
       <header class="topbar simple-topbar">
         <div>
@@ -16,6 +21,7 @@
         <div class="top-actions">
           <a class="ghost-button" href="index.html">工具首页</a>
           <a class="ghost-button" href="app.html">算法卡片</a>
+          <button class="ghost-button" id="editButton" type="button">编辑当前卡片</button>
           <button class="primary-button" id="flipButton" type="button">查看答案</button>
         </div>
       </header>
@@ -38,12 +44,13 @@
               <div class="simple-card-meta"><span id="cardCategory">未分类</span><span id="cardProficiency">生疏</span></div>
               <p class="simple-side-label">题面</p>
               <h2 id="cardQuestion">创建第一张卡片，开始记录你的八股知识。</h2>
-              <p class="simple-flip-tip" id="cardFlipTip">点击卡片：精简答案 → 详细答案</p>
+              <p class="simple-flip-tip" id="cardFlipTip">点击卡片查看精简答案。</p>
             </div>
             <div class="card-side card-back simple-card-face">
               <div class="simple-card-meta"><span id="cardCategoryBack">未分类</span><span id="cardProficiencyBack">生疏</span></div>
               <p class="simple-side-label" id="cardAnswerLabel">精简答案</p>
               <div class="simple-answer" id="cardAnswer">答案会显示在这里。</div>
+              <button class="simple-detail-trigger hidden" id="showDetailedButton" type="button">查看详细答案</button>
             </div>
           </article>
           <div class="review-actions simple-review-actions" aria-label="更新记忆熟练度">
@@ -77,14 +84,15 @@
             <label>记忆熟练度<select name="proficiency"><option>生疏</option><option>一般</option><option>熟练</option></select></label>
             <label>题面<textarea name="question" required rows="5" placeholder="例如：MySQL 的 MVCC 是什么？它解决了什么问题？"></textarea></label>
             <label>精简答案<textarea name="briefAnswer" required rows="3" placeholder="第一次翻面展示：用 1～3 句话说清核心结论。"></textarea></label>
-            <label>详细答案<textarea name="detailedAnswer" required rows="7" placeholder="第二次翻面展示：补充原理、流程、边界和面试表达。支持换行。"></textarea><span class="simple-field-tip">答案中用 **重点内容** 包裹的文字会加粗展示。</span></label>
+            <label>详细答案（可选）<textarea name="detailedAnswer" rows="7" placeholder="第二次翻面展示：补充原理、流程、边界和面试表达。留空时，精简答案就是最终页。"></textarea><span class="simple-field-tip">答案中用 **重点内容** 包裹的文字会加粗展示。</span></label>
             <button class="primary-button full" id="saveButton" type="submit">保存卡片</button>
+            <span class="simple-field-tip">填写时会自动保存草稿；按 Ctrl + Enter 可快速保存卡片。</span>
             <button class="ghost-button full hidden" id="cancelEditButton" type="button">取消编辑</button>
           </form>
-          <div class="simple-editor-actions"><button class="ghost-button" id="editButton" type="button">编辑当前卡片</button><button class="danger-button" id="deleteButton" type="button">删除当前卡片</button></div>
+          <div class="simple-editor-actions"><button class="danger-button" id="deleteButton" type="button">删除当前卡片</button></div>
           <details class="simple-data-panel">
             <summary>数据备份</summary>
-            <p>卡片仅保存在当前浏览器。导出后可在另一台设备或浏览器导入。</p>
+            <p>通过启动脚本打开时，卡片会同时保存到当前浏览器和本机卡片库；导出后可在另一台设备或浏览器导入。</p>
             <button class="ghost-button full" id="exportButton" type="button">导出所有卡片</button>
             <label class="file-button">导入备份<input id="importInput" type="file" accept="application/json"></label>
           </details>

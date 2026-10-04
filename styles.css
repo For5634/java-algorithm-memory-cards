@@ -155,6 +155,15 @@
   line-height: 1.9;
 }
 
+.simple-answer code {
+  border-radius: 4px;
+  background: #ebe7df;
+  color: #9b352e;
+  padding: 1px 5px;
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 0.88em;
+}
+
 .simple-flip-tip,
 .simple-review-note,
 .simple-editor-head p {
@@ -216,7 +225,7 @@
 
 .simple-editor-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 9px;
   margin-top: 16px;
 }
@@ -309,8 +318,52 @@
   border-color: #a7c5b1;
 }
 
+.simple-flashcard[data-reveal-stage="1"],
 .simple-flashcard[data-reveal-stage="2"] {
   cursor: default;
+}
+
+.simple-local-warning {
+  position: sticky;
+  z-index: 10;
+  top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(1180px, calc(100% - 40px));
+  margin: 12px auto -4px;
+  border: 1px solid #d5ad57;
+  border-radius: 12px;
+  background: #fff6df;
+  color: #65450b;
+  padding: 11px 14px;
+  box-shadow: 0 8px 22px rgb(99 69 11 / 10%);
+  font-size: 14px;
+}
+
+.simple-local-warning strong { white-space: nowrap; }
+
+.simple-local-warning a {
+  margin-left: auto;
+  border-bottom: 1px solid currentColor;
+  color: #805700;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.simple-detail-trigger {
+  margin-top: 28px;
+  border: 1px solid #90b7c7;
+  border-radius: 999px;
+  background: #edf6f9;
+  color: var(--blue);
+  padding: 9px 15px;
+  font-weight: 750;
+}
+
+.simple-detail-trigger:hover:not(:disabled) {
+  background: #d9edf3;
+  border-color: var(--blue);
 }
 
 .simple-list-card[data-proficiency="生疏"] small {
@@ -402,6 +455,14 @@
   .simple-flip-tip {
     right: 24px;
   }
+
+  .simple-local-warning {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    width: min(100% - 28px, 1180px);
+  }
+
+  .simple-local-warning a { margin-left: 0; }
 
   .simple-review-actions {
     display: grid;

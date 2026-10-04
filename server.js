@@ -6,6 +6,9 @@ const path = require("path");
 
 const PORT = Number(process.env.PORT || 8787);
 const ROOT = __dirname;
+const LOCAL_DATA_DIR = path.join(ROOT, ".local-data");
+const INTERVIEW_CARDS_FILE = path.join(LOCAL_DATA_DIR, "interview-cards.json");
+const INTERVIEW_CARDS_BACKUP_FILE = path.join(LOCAL_DATA_DIR, "interview-cards.backup.json");
 const SYNC_TTL_MS = 10 * 60 * 1000;
 const syncStore = new Map();
 const MIME = {
@@ -24,6 +27,19 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && req.url === "/api/generate-card") {
       await handleGenerateCard(req, res);
+      return;
+    }
+
+    if (url.pathname === "/api/interview-cards") {
+      if (req.method === "GET") {
+        await handleReadInterviewCards(res);
+        return;
+      }
+      if (req.method === "PUT") {
+        await handleWriteInterviewCards(req, res);
+        return;
+      }
+      send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
       return;
     }
 
@@ -65,6 +81,43 @@ const server = http.createServer(async (req, res) => {
     send(res, 500, JSON.stringify({ error: error.message }), "application/json; charset=utf-8");
   }
 });
+
+async function handleReadInterviewCards(res) {
+  try {
+    const text = await fs.promises.readFile(INTERVIEW_CARDS_FILE, "utf8");
+    const payload = JSON.parse(text);
+    sendJson(res, 200, { cards: Array.isArray(payload.cards) ? payload.cards : [], savedAt: payload.savedAt || null });
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      sendJson(res, 200, { cards: [], savedAt: null });
+      return;
+    }
+    throw error;
+  }
+}
+
+async function handleWriteInterviewCards(req, res) {
+  const body = await readBody(req);
+  const payload = JSON.parse(body || "{}");
+  if (!payload || !Array.isArray(payload.cards)) {
+    sendJson(res, 400, { error: "卡片数据格式不正确。" });
+    return;
+  }
+  await fs.promises.mkdir(LOCAL_DATA_DIR, { recursive: true });
+  const savedAt = new Date().toISOString();
+  const nextPayload = { version: 1, savedAt, cards: payload.cards };
+  try {
+    const previousText = await fs.promises.readFile(INTERVIEW_CARDS_FILE, "utf8");
+    const previous = JSON.parse(previousText);
+    if (Array.isArray(previous.cards) && previous.cards.length && previousText !== JSON.stringify(nextPayload, null, 2)) {
+      await fs.promises.writeFile(INTERVIEW_CARDS_BACKUP_FILE, previousText, "utf8");
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  await fs.promises.writeFile(INTERVIEW_CARDS_FILE, JSON.stringify(nextPayload, null, 2), "utf8");
+  sendJson(res, 200, { savedAt, count: payload.cards.length });
+}
 
 async function handleCreateSync(req, res) {
   const body = await readBody(req);
