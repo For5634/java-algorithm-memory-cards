@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "java-interview-flashcards:simple:v1";
-  const INITIAL_CARDS_KEY = "java-interview-flashcards:initial-cards-loaded:v1";
+  const INITIAL_CARDS_KEY = "java-interview-flashcards:initial-cards-loaded:v2";
   const DRAFT_KEY = "java-interview-flashcards:draft:v1";
   const LEGACY_KEY = "java-interview-flashcards:v1";
   const PROFICIENCY = ["生疏", "一般", "熟练"];
@@ -88,11 +88,12 @@
       if (!response.ok) throw new Error("读取初始卡片失败");
       const payload = await response.json();
       const initialCards = Array.isArray(payload.cards) ? payload.cards : [];
+      const previousCount = state.cards.length;
       state.cards = mergeCardCollections(state.cards, initialCards);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cards));
       localStorage.setItem(INITIAL_CARDS_KEY, "1");
       render();
-      if (initialCards.length) showToast(`已加载 ${initialCards.length} 张初始卡片`);
+      if (state.cards.length > previousCount) showToast(`已恢复 ${state.cards.length - previousCount} 张卡片`);
     } catch (error) {
       console.warn("初始卡片加载失败：", error);
     }
